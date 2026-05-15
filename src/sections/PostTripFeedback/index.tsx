@@ -2,27 +2,28 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const quickTags = [
-  { id: 1, label: "Lái xe an toàn", emoji: "🛡️" },
-  { id: 2, label: "Nhiệt tình", emoji: "😊" },
-  { id: 3, label: "Đúng giờ", emoji: "⏰" },
-  { id: 4, label: "Xe sạch sẽ", emoji: "✨" },
-  { id: 5, label: "Thân thiện", emoji: "🤝" },
-  { id: 6, label: "Giá tốt", emoji: "💰" },
-  { id: 7, label: "Dịch vụ tốt", emoji: "⭐" },
-  { id: 8, label: "Tiện nghi", emoji: "🚌" },
+  { id: 1, label: "Lái xe an toàn" },
+  { id: 2, label: "Nhiệt tình" },
+  { id: 3, label: "Đúng giờ" },
+  { id: 4, label: "Xe sạch sẽ" },
+  { id: 5, label: "Thân thiện" },
+  { id: 6, label: "Giá tốt" },
+  { id: 7, label: "Dịch vụ tốt" },
+  { id: 8, label: "Tiện nghi" },
 ];
 
-const emojiRatings = [
-  { value: 1, emoji: "😠", label: "Rất không hài lòng" },
-  { value: 2, emoji: "😕", label: "Không hài lòng" },
-  { value: 3, emoji: "😐", label: "Bình thường" },
-  { value: 4, emoji: "🙂", label: "Hài lòng" },
-  { value: 5, emoji: "😍", label: "Rất hài lòng" },
-];
+const ratingLabels: Record<number, string> = {
+  1: "Rất không hài lòng",
+  2: "Không hài lòng",
+  3: "Bình thường",
+  4: "Hài lòng",
+  5: "Tuyệt vời",
+};
 
 export const PostTripFeedback = () => {
   const navigate = useNavigate();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [comment, setComment] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -38,170 +39,184 @@ export const PostTripFeedback = () => {
   const handleSubmit = () => {
     if (selectedRating) {
       setIsSubmitted(true);
-      // Simulate submission
+      // Simulate API call
       setTimeout(() => {
         navigate('/');
       }, 2000);
     }
   };
 
+  const currentRating = hoveredRating || selectedRating;
+
+  // Success Screen
   if (isSubmitted) {
     return (
-      <main className="text-sm bg-gray-100 box-border caret-transparent leading-5 min-h-screen flex items-center justify-center outline-[3px] w-full md:text-base md:leading-6">
-        <div className="text-sm shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent flex flex-col leading-5 outline-[3px] bg-white rounded-xl border border-gray-200 max-w-md mx-4 text-center md:text-base md:leading-6 p-8">
-          <div className="text-sm box-border caret-transparent w-20 h-20 leading-5 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center outline-[3px] md:text-base md:leading-6">
-            <svg
-              className="text-sm box-border caret-transparent w-10 h-10 leading-5 outline-[3px] text-green-600 md:text-base md:leading-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-sm w-full text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-50 flex items-center justify-center">
+            <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>
-          <h2 className="text-[15px] font-semibold box-border caret-transparent block leading-5 outline-[3px] text-black mb-2 md:text-base md:leading-6">
+          <h2 className="text-xl font-bold text-slate-900 mb-2">
             Cảm ơn bạn!
           </h2>
-          <p className="text-gray-600 text-sm box-border caret-transparent block leading-5 outline-[3px] md:text-base md:leading-6">
-            Đánh giá của bạn đã được ghi nhận. Chúng tôi sẽ tiếp tục cải thiện dịch vụ.
+          <p className="text-sm text-slate-500 leading-relaxed">
+            Đánh giá của bạn đã được ghi nhận. Chúng tôi sẽ tiếp tục cải thiện dịch vụ để mang lại trải nghiệm tốt nhất.
           </p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="text-sm bg-gray-100 box-border caret-transparent leading-5 min-h-screen outline-[3px] w-full md:text-base md:leading-6">
-      {/* Header */}
-      <div className="text-white text-sm bg-[linear-gradient(rgb(241,100,57),rgb(242,117,78))] box-border caret-transparent flex h-14 items-center leading-5 outline-[3px] w-full md:text-neutral-900 md:bg-none md:leading-6">
-        <div className="text-sm box-border caret-transparent flex items-center justify-between leading-5 max-w-[1128px] outline-[3px] mx-auto px-6 md:text-base md:leading-6">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+      {/* Clean, Modern Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="text-white text-sm box-border caret-transparent flex items-center gap-2 leading-5 outline-[3px] md:text-neutral-900 md:leading-6"
+            className="flex items-center text-slate-500 hover:text-slate-800 transition-colors p-2 -ml-2"
           >
-            <img
-              src="https://futabus.vn/images/icons/back.svg"
-              alt="back"
-              className="text-white box-border caret-transparent leading-5 max-w-full outline-[3px] md:text-neutral-900 md:leading-6"
-            />
-            <span className="text-sm box-border caret-transparent block leading-5 outline-[3px] md:text-base md:leading-6">
-              Đóng
-            </span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
           </button>
-          <span className="text-sm font-medium box-border caret-transparent leading-5 outline-[3px] text-orange-500 md:text-base md:leading-6">
+          <span className="text-[15px] font-bold text-slate-900">
             Đánh giá chuyến đi
           </span>
-          <div className="text-sm box-border caret-transparent w-16 leading-5 outline-[3px] md:text-base md:leading-6" />
+          <div className="w-9" /> {/* Spacer for centering */}
         </div>
-      </div>
+      </header>
 
-      <div className="text-sm box-border caret-transparent leading-5 max-w-[600px] outline-[3px] mx-auto pb-8 pt-6 px-6 md:text-base md:leading-6">
-        {/* Trip Info */}
-        <div className="text-sm shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full bg-white rounded-xl md:text-base md:leading-6 mb-6 p-4">
-          <div className="text-sm box-border caret-transparent flex items-center justify-between leading-5 outline-[3px] md:text-base md:leading-6">
-            <div className="text-sm box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">
-              <p className="text-gray-500 text-sm box-border caret-transparent block leading-5 outline-[3px] md:text-base md:leading-6">Chuyến đi vừa hoàn thành</p>
-              <p className="text-[15px] font-semibold box-border caret-transparent block leading-5 outline-[3px] text-black md:text-base md:leading-6">
-                TP. Hồ Chí Minh - Bến xe Đà Lạt
-              </p>
-              <p className="text-gray-500 text-sm box-border caret-transparent block leading-5 outline-[3px] md:text-base md:leading-6">14/05/2026 - 23:30</p>
-            </div>
-            <div className="text-sm box-border caret-transparent w-16 h-16 leading-5 rounded-full bg-orange-100 flex items-center justify-center outline-[3px] md:text-base md:leading-6">
-              <span className="text-2xl box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">🚌</span>
-            </div>
+      <main className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
+        
+        {/* Trip Summary Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Chuyến đi vừa hoàn thành</p>
+            <p className="text-base font-bold text-slate-900 mb-1">
+              TP. Hồ Chí Minh <span className="text-slate-400 mx-1">→</span> Đà Lạt
+            </p>
+            <p className="text-sm text-slate-500 font-medium">14/05/2026 • 23:30</p>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 shadow-sm shrink-0">
+            {/* Professional SVG Bus Icon instead of Emoji */}
+            <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+            </svg>
           </div>
         </div>
 
-        {/* Rating Question */}
-        <div className="text-sm shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full bg-white rounded-xl md:text-base md:leading-6 mb-6 p-6">
-          <h2 className="text-[15px] font-semibold box-border caret-transparent block leading-5 outline-[3px] text-black mb-2 text-center md:text-base md:leading-6">
-            Bạn cảm thấy thế nào về chuyến đi này?
+        {/* Professional Star Rating Question */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+          <h2 className="text-lg font-bold text-slate-900 text-center mb-6">
+            Bạn cảm thấy thế nào về chuyến đi?
           </h2>
-          <p className="text-gray-500 text-sm box-border caret-transparent block leading-5 outline-[3px] text-center mb-6 md:text-base md:leading-6">
-            Chọn biểu tượng cảm xúc để đánh giá
-          </p>
 
-          <div className="text-sm box-border caret-transparent flex justify-center leading-5 outline-[3px] gap-4 mb-6 md:text-base md:leading-6">
-            {emojiRatings.map((rating) => (
+          <div className="flex justify-center items-center gap-2 sm:gap-4 mb-4">
+            {[1, 2, 3, 4, 5].map((star) => (
               <button
-                key={rating.value}
-                onClick={() => setSelectedRating(rating.value)}
-                className={`text-sm box-border caret-transparent flex flex-col items-center gap-2 leading-5 outline-[3px] p-4 rounded-xl border-2 transition-all md:text-base md:leading-6 ${
-                  selectedRating === rating.value
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200 hover:border-orange-300"
-                }`}
+                key={star}
+                onClick={() => setSelectedRating(star)}
+                onMouseEnter={() => setHoveredRating(star)}
+                onMouseLeave={() => setHoveredRating(null)}
+                className="transform transition-transform duration-200 hover:scale-110 focus:outline-none"
               >
-                <span className="text-4xl box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">{rating.emoji}</span>
-                <span className="text-sm box-border caret-transparent leading-5 outline-[3px] text-gray-600 md:text-base md:leading-6">{rating.label}</span>
+                <svg 
+                  className={`w-10 h-10 sm:w-12 sm:h-12 transition-colors duration-200 ${
+                    currentRating && star <= currentRating 
+                      ? "text-yellow-400 fill-current drop-shadow-sm" 
+                      : "text-slate-200 fill-current"
+                  }`} 
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Quick Tags */}
-        <div className="text-sm shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full bg-white rounded-xl md:text-base md:leading-6 mb-6 p-6">
-          <h2 className="text-[15px] font-semibold box-border caret-transparent block leading-5 outline-[3px] text-black mb-4 md:text-base md:leading-6">
-            Bạn thích điều gì nhất?
-          </h2>
-          <p className="text-gray-500 text-sm box-border caret-transparent block leading-5 outline-[3px] mb-4 md:text-base md:leading-6">
-            Chọn tất cả những gì phù hợp (có thể chọn nhiều)
-          </p>
-
-          <div className="text-sm box-border caret-transparent flex flex-wrap leading-5 outline-[3px] gap-3 md:text-base md:leading-6">
-            {quickTags.map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() => handleTagToggle(tag.id)}
-                className={`text-sm box-border caret-transparent flex items-center gap-2 leading-5 outline-[3px] px-4 py-3 rounded-full border-2 transition-all md:text-base md:leading-6 ${
-                  selectedTags.includes(tag.id)
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200 hover:border-orange-300"
-                }`}
-              >
-                <span className="text-xl box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">{tag.emoji}</span>
-                <span className="text-sm font-medium box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">{tag.label}</span>
-              </button>
-            ))}
+          
+          {/* Dynamic Rating Label */}
+          <div className="h-6 text-center">
+            {currentRating && (
+              <span className="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                {ratingLabels[currentRating]}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Comment (Optional) */}
-        <div className="text-sm shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full bg-white rounded-xl md:text-base md:leading-6 mb-6 p-6">
-          <h2 className="text-[15px] font-semibold box-border caret-transparent block leading-5 outline-[3px] text-black mb-4 md:text-base md:leading-6">
-            Góp thêm ý kiến (tùy chọn)
-          </h2>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Chia sẻ thêm về trải nghiệm của bạn..."
-            className="text-sm box-border caret-transparent w-full leading-5 border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-orange-500 transition resize-none outline-[3px] md:text-base md:leading-6"
-            rows={3}
-          />
+        {/* Quick Tags (Clean, No Emojis) */}
+        <div className={`transition-opacity duration-300 ${selectedRating ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-base font-bold text-slate-900 mb-1">
+              Điểm nổi bật nhất?
+            </h2>
+            <p className="text-sm text-slate-500 mb-5">
+              Chọn các tiêu chí phù hợp (có thể chọn nhiều)
+            </p>
+
+            <div className="flex flex-wrap gap-2.5">
+              {quickTags.map((tag) => {
+                const isSelected = selectedTags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagToggle(tag.id)}
+                    className={`px-4 py-2.5 rounded-xl border text-sm transition-all duration-200 ${
+                      isSelected
+                        ? "bg-orange-50 border-orange-500 text-orange-700 font-bold"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium"
+                    }`}
+                  >
+                    {tag.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={!selectedRating}
-          className="text-sm box-border caret-transparent w-full leading-5 bg-orange-500 text-white font-medium py-4 rounded-full hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed outline-[3px] md:text-base md:leading-6"
-        >
-          Gửi đánh giá
-        </button>
+        {/* Comment Section */}
+        <div className={`transition-opacity duration-300 ${selectedRating ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-base font-bold text-slate-900 mb-4">
+              Góp thêm ý kiến <span className="text-slate-400 font-normal text-sm">(Tùy chọn)</span>
+            </h2>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Chia sẻ thêm về trải nghiệm của bạn với tài xế và dịch vụ..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"
+              rows={4}
+            />
+          </div>
+        </div>
 
-        {/* Skip Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="text-sm box-border caret-transparent w-full mt-3 leading-5 text-gray-500 font-medium py-2 hover:text-gray-700 transition outline-[3px] md:text-base md:leading-6"
-        >
-          Bỏ qua
-        </button>
-      </div>
-    </main>
+        {/* Action Buttons */}
+        <div className="pt-2 pb-8 space-y-3">
+          <button
+            onClick={handleSubmit}
+            disabled={!selectedRating}
+            className={`w-full py-4 rounded-xl font-bold text-base transition-all duration-200 ${
+              selectedRating 
+                ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-md transform hover:-translate-y-0.5' 
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            Gửi đánh giá
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            Bỏ qua
+          </button>
+        </div>
+
+      </main>
+    </div>
   );
 };
