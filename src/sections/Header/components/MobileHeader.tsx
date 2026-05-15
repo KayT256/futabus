@@ -1,4 +1,38 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+
 export const MobileHeader = () => {
+  const { isLoggedIn, userName, login } = useAuth();
+  const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    if (isLoggedIn) {
+      setIsDropdownOpen(!isDropdownOpen);
+    } else {
+      login();
+    }
+  };
+
+  const handleNavigateToProgress = () => {
+    setIsDropdownOpen(false);
+    navigate('/trip-progress');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="box-border caret-transparent flex flex-col leading-5 outline-[3px] md:hidden md:leading-6">
       <div className="box-border caret-transparent flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:leading-6 md:min-h-0 md:min-w-0">
@@ -29,12 +63,49 @@ export const MobileHeader = () => {
               className="text-transparent aspect-[auto_115_/_36] box-border leading-5 max-w-full outline-[3px] w-[115px] md:leading-6"
             />
           </a>
-          <div className="box-border caret-transparent leading-5 min-h-[auto] min-w-[auto] outline-[3px] mr-5 md:leading-6 md:min-h-0 md:min-w-0">
-            <img
-              alt="avatar"
-              src="https://futabus.vn/_next/static/media/person.abc5e83c.svg"
-              className="text-transparent aspect-[auto_28_/_28] box-border leading-5 max-w-full outline-[3px] w-7 md:leading-6"
-            />
+          <div className="box-border caret-transparent leading-5 min-h-[auto] min-w-[auto] outline-[3px] mr-5 md:leading-6 md:min-h-0 md:min-w-0 relative">
+            <div className="relative" ref={dropdownRef}>
+              <img
+                alt="avatar"
+                src="https://futabus.vn/_next/static/media/person.abc5e83c.svg"
+                className="text-transparent aspect-[auto_28_/_28] box-border leading-5 max-w-full outline-[3px] w-7 md:leading-6 cursor-pointer"
+                onClick={handleClick}
+              />
+              
+              {/* Dropdown Menu */}
+              {isLoggedIn && isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                  <button
+                    onClick={handleNavigateToProgress}
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7" />
+                    </svg>
+                    Hành trình của bạn
+                  </button>
+                  <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Lịch sử đặt vé
+                  </button>
+                  <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Thông tin tài khoản
+                  </button>
+                  <div className="border-t border-slate-100 my-2"></div>
+                  <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -48,8 +119,11 @@ export const MobileHeader = () => {
             ></a>
           </div>
           <a className="box-border caret-transparent flex leading-5 outline-[3px] mb-3 md:leading-6 hover:text-orange-400 hover:outline-0">
-            <button className="text-orange-600 normal-nums bg-transparent caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] text-center px-2 py-0 md:leading-6 md:min-h-0 md:min-w-0">
-              Đăng nhập/Đăng ký
+            <button
+              onClick={handleClick}
+              className="text-orange-600 normal-nums bg-transparent caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] text-center px-2 py-0 md:leading-6 md:min-h-0 md:min-w-0 cursor-pointer hover:text-orange-700"
+            >
+              {isLoggedIn ? userName : 'Đăng nhập/Đăng ký'}
             </button>
           </a>
           <nav className="static box-border caret-transparent float-none leading-5 outline-[3px] w-auto overflow-hidden top-auto md:relative md:float-right md:leading-6 md:w-fit md:top-0">

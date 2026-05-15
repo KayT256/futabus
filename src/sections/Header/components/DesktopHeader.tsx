@@ -1,4 +1,38 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+
 export const DesktopHeader = () => {
+  const { isLoggedIn, userName, login } = useAuth();
+  const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    if (isLoggedIn) {
+      setIsDropdownOpen(!isDropdownOpen);
+    } else {
+      login();
+    }
+  };
+
+  const handleNavigateToProgress = () => {
+    setIsDropdownOpen(false);
+    navigate('/trip-progress');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="box-border caret-transparent hidden h-20 leading-5 max-w-none outline-[3px] mx-0 md:flex md:leading-6 md:max-w-[1128px] md:mx-auto">
       <div className="items-start box-border caret-transparent flex basis-[0%] grow leading-5 min-h-0 min-w-0 outline-[3px] mt-4 md:leading-6 md:min-h-[auto] md:min-w-[auto]">
@@ -47,16 +81,55 @@ export const DesktopHeader = () => {
           />
         </a>
       </div>
-      <div className="box-border caret-transparent flex basis-[0%] grow justify-end leading-5 min-h-0 min-w-0 outline-[3px] mt-4 md:leading-6 md:min-h-[auto] md:min-w-[auto]">
-        <div className="text-sm font-medium items-start box-border caret-transparent gap-x-4 flex leading-5 min-h-0 min-w-0 outline-[3px] gap-y-4 text-center md:min-h-[auto] md:min-w-[auto]">
-          <a className="text-black items-center bg-white box-border caret-transparent gap-x-3 flex h-8 min-h-0 min-w-0 outline-[3px] gap-y-3 w-44 p-2 rounded-2xl md:min-h-[auto] md:min-w-[auto] hover:outline-0">
-            <img
-              src="https://futabus.vn/images/icons/person.svg"
-              alt="person"
-              className="aspect-[auto_20_/_20] box-border caret-transparent max-w-full min-h-0 min-w-0 outline-[3px] w-5 md:min-h-[auto] md:min-w-[auto]"
-            />
-            Đăng nhập/Đăng ký
-          </a>
+      <div className="box-border caret-transparent flex basis-[0%] grow justify-end leading-5 min-h-0 min-w-0 outline-[3px] mt-4 md:leading-6 md:min-h-[auto] md:min-w-[auto] relative">
+        <div className="text-xs font-medium items-start box-border caret-transparent gap-x-2 flex leading-5 min-h-0 min-w-0 outline-[3px] gap-y-4 text-center md:min-h-[auto] md:min-w-[auto]">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={handleClick}
+              className="text-black items-center bg-white box-border caret-transparent gap-x-2 flex h-8 min-h-0 min-w-0 outline-[3px] gap-y-3 w-40 p-2 rounded-2xl md:min-h-[auto] md:min-w-[auto] hover:outline-0 cursor-pointer hover:bg-orange-50 transition-colors"
+            >
+              <img
+                src="https://futabus.vn/images/icons/person.svg"
+                alt="person"
+                className="aspect-[auto_20_/_20] box-border caret-transparent max-w-full min-h-0 min-w-0 outline-[3px] w-5 md:min-h-[auto] md:min-w-[auto]"
+              />
+              {isLoggedIn ? userName : 'Đăng nhập/Đăng ký'}
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isLoggedIn && isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                <button
+                  onClick={handleNavigateToProgress}
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7" />
+                  </svg>
+                  Hành trình của bạn
+                </button>
+                <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Lịch sử đặt vé
+                </button>
+                <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Thông tin tài khoản
+                </button>
+                <div className="border-t border-slate-100 my-2"></div>
+                <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

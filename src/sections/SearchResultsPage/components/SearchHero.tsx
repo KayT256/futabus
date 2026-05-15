@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { SearchForm } from "@/sections/SearchResultsPage/components/SearchForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const SearchHero = () => {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   
   return (
     <div className="text-sm box-border caret-transparent leading-5 max-w-[1128px] outline-[3px] mx-auto pb-2 md:text-base md:leading-6 md:pb-8">
@@ -403,6 +405,7 @@ export const SearchHero = () => {
                     Chọn →</span>
                 </div>
               </div>
+              {!isLoggedIn && (
               <div className="text-sm [align-items:normal] box-border caret-transparent flex flex-col leading-5 outline-[3px] mb-6 mx-0 rounded-xl md:text-base md:items-start md:leading-6 md:mx-6">
                 <div className="relative text-sm bg-white shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent leading-5 max-w-none min-h-[auto] min-w-[auto] outline-[3px] w-full rounded-xl md:text-base md:leading-6 md:max-w-[700px]">
                   <div className="relative text-sm box-border caret-transparent leading-5 outline-[3px] overflow-hidden md:text-base md:leading-6">
@@ -439,6 +442,7 @@ export const SearchHero = () => {
                   </div>
                 </div>
               </div>
+              )}
               <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
                 <div className="text-sm box-border caret-transparent leading-5 min-h-[auto] min-w-[auto] outline-[3px] px-3 md:text-base md:leading-6 md:px-6">
                   <div className="text-sm items-start box-border caret-transparent gap-x-10 flex leading-5 outline-[3px] gap-y-10 md:text-base md:leading-6">
