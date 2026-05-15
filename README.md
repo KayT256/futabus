@@ -11,6 +11,8 @@ This repo contains a conceptual clone of the FUTA transportation app, featuring 
 * **User App (Normal View):** [http://futabus.vercel.app/](http://futabus.vercel.app/)
 * **Admin / Management View:** [http://futabus.vercel.app/crew-score-dashboard](http://futabus.vercel.app/crew-score-dashboard)
 
+> 💡 Technical Note: Some images in this demo are fetched directly from FUTA's CDN. If you are accessing these links from outside of Vietnam, the images may not load correctly due to regional restrictions.
+
 ---
 
 ## Key Functional Modules
