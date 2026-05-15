@@ -225,7 +225,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -239,13 +239,15 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm [align-items:normal] box-border caret-transparent flex flex-col leading-5 outline-[3px] mb-6 mx-0 rounded-xl md:text-base md:items-start md:leading-6 md:mx-6">
             <div className="relative text-sm bg-white shadow-[rgba(0,0,0,0.16)_0px_3px_6px_0px,rgba(0,0,0,0.2)_0px_3px_6px_0px] box-border caret-transparent leading-5 max-w-none min-h-[auto] min-w-[auto] outline-[3px] w-full rounded-xl md:text-base md:leading-6 md:max-w-[700px]">
               <div className="relative text-sm box-border caret-transparent leading-5 outline-[3px] overflow-hidden md:text-base md:leading-6">
-                <div className="relative text-sm box-border caret-transparent leading-5 outline-[3px] w-[969px] mx-auto left-0 top-0 md:text-base md:leading-6 before:accent-auto before:box-border before:caret-transparent before:text-neutral-900 before:table before:text-sm before:not-italic before:tabular-nums before:font-normal before:tracking-[normal] before:leading-5 before:list-outside before:list-disc before:outline-[3px] before:pointer-events-auto before:text-start before:no-underline before:indent-[0px] before:normal-case before:visible before:border-separate before:font-intertight before:md:text-base before:md:leading-6 after:accent-auto after:box-border after:caret-transparent after:clear-both after:text-neutral-900 after:table after:text-sm after:not-italic after:tabular-nums after:font-normal after:tracking-[normal] after:leading-5 after:list-outside after:list-disc after:outline-[3px] after:pointer-events-auto after:text-start after:no-underline after:indent-[0px] after:normal-case after:visible after:border-separate after:font-intertight after:md:text-base after:md:leading-6">
-                  <div className="text-sm box-border caret-transparent float-left h-full leading-5 min-h-px outline-[3px] w-[969px] md:text-base md:leading-6">
+                <div className="relative text-sm box-border caret-transparent leading-5 outline-[3px] w-full left-0 top-0 md:text-base md:leading-6 before:accent-auto before:box-border before:caret-transparent before:text-neutral-900 before:table before:text-sm before:not-italic before:tabular-nums before:font-normal before:tracking-[normal] before:leading-5 before:list-outside before:list-disc before:outline-[3px] before:pointer-events-auto before:text-start before:no-underline before:indent-[0px] before:normal-case before:visible before:border-separate before:font-intertight before:md:text-base before:md:leading-6 after:accent-auto after:box-border after:caret-transparent after:clear-both after:text-neutral-900 after:table after:text-sm after:not-italic after:tabular-nums after:font-normal after:tracking-[normal] after:leading-5 after:list-outside after:list-disc after:outline-[3px] after:pointer-events-auto after:text-start after:no-underline after:indent-[0px] after:normal-case after:visible after:border-separate after:font-intertight after:md:text-base after:md:leading-6">
+                  <div className="text-sm box-border caret-transparent h-full leading-5 min-h-px outline-[3px] w-full md:text-base md:leading-6">
                     <div className="text-sm box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6">
                       <div className="text-sm items-center box-border caret-transparent gap-x-3 flex h-40 justify-between leading-5 outline-[3px] gap-y-3 px-6 py-4 md:text-base md:leading-6">
                         <div className="text-sm box-border caret-transparent flex flex-col leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6">
@@ -442,7 +444,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -456,6 +458,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -623,7 +627,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -637,6 +641,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -804,7 +810,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -818,6 +824,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -985,7 +993,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -999,6 +1007,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -1166,7 +1176,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -1180,6 +1190,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -1347,7 +1359,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -1361,6 +1373,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -1528,7 +1542,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -1542,6 +1556,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -1709,7 +1725,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -1723,6 +1739,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -1890,7 +1908,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -1904,6 +1922,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm box-border caret-transparent leading-5 outline-[3px] md:text-base md:leading-6"></div>
@@ -2072,7 +2092,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -2086,6 +2106,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -2253,7 +2275,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -2267,6 +2289,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -2434,7 +2458,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -2448,6 +2472,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
           <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -2615,7 +2641,7 @@ export const ResultsPanel = () => {
                 </span>
               </button>
             </div>
-            <div className="text-gray-500 text-sm items-center box-border caret-transparent flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] pb-2 px-2 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0">
+            <div onClick={() => navigate('/booking')} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
               <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
                 <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
                 <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">
@@ -2629,6 +2655,8 @@ export const ResultsPanel = () => {
               <span className="text-orange-600 text-lg font-semibold box-border caret-transparent block leading-7 min-h-[auto] min-w-[auto] outline-[3px] text-end md:inline md:min-h-0 md:min-w-0">
                 290.000đ
               </span>
+              <span className="shrink-0 text-orange-600 text-xs font-semibold border border-orange-300 px-3 py-1 rounded-full bg-white">
+                Chọn →</span>
             </div>
           </div>
         </div>
