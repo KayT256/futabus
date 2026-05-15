@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { trips } from "@/data/trips";
 
 const getDriverData = (driverId: string) => {
@@ -59,6 +59,9 @@ const getDriverData = (driverId: string) => {
 
 export const CrewScoreDetail = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const tripId = searchParams.get('tripId');
   const { id } = useParams<{ id: string }>();
   const mockDriverData = getDriverData(id || "TX001") || {
     id: "TX001",
@@ -126,7 +129,7 @@ export const CrewScoreDetail = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
-              onClick={() => navigate('/booking')}
+              onClick={() => navigate(tripId ? `/booking?tripId=${tripId}` : '/booking')}
               className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-medium"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

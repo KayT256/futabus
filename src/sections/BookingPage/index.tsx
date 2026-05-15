@@ -285,7 +285,9 @@ const DeckTable = ({
 export const BookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const trip = location.state?.trip || trips[0];
+  const searchParams = new URLSearchParams(location.search);
+  const tripId = searchParams.get('tripId');
+  const trip = (tripId ? trips.find(t => t.id === tripId) : null) ?? trips[0];
   
   const [lowerSeats, setLowerSeats] = useState(generateRandomSeats(trip.id));
   const [upperSeats, setUpperSeats] = useState(generateRandomUpperSeats(trip.id));
@@ -628,7 +630,7 @@ export const BookingPage = () => {
               <p className="mb-4 flex items-center justify-between text-xl font-medium text-black">
                 <span className="flex items-center gap-2">Thông tin tài xế</span>
                 <button
-                  onClick={() => navigate(`/crew-score/${trip.driver.id}`)}
+                  onClick={() => navigate(`/crew-score/${trip.driver.id}?tripId=${trip.id}`)}
                   className="text-base text-orange-500 underline cursor-pointer hover:text-orange-600"
                 >
                   Chi tiết
