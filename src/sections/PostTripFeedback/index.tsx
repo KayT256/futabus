@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { trips } from "@/data/trips";
 
 const quickTags = [
   { id: 1, label: "Lái xe an toàn" },
@@ -22,8 +23,29 @@ const ratingLabels: Record<number, string> = {
 
 export const PostTripFeedback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const trip = location.state?.trip || trips[0];
+  
+  if (!trip || !trip.driver) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-sm w-full text-center">
+          <p className="text-slate-500">Không tìm thấy thông tin chuyến đi</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 text-orange-500 underline"
+          >
+            Về trang chủ
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [selectedDriverRating, setSelectedDriverRating] = useState<number | null>(null);
+  const [hoveredDriverRating, setHoveredDriverRating] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [comment, setComment] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -96,9 +118,9 @@ export const PostTripFeedback = () => {
           <div>
             <p className="text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Chuyến đi vừa hoàn thành</p>
             <p className="text-base font-bold text-slate-900 mb-1">
-              TP. Hồ Chí Minh <span className="text-slate-400 mx-1">→</span> Đà Lạt
+              {trip.route}
             </p>
-            <p className="text-sm text-slate-500 font-medium">14/05/2026 • 23:30</p>
+            <p className="text-sm text-slate-500 font-medium">{trip.date} • {trip.departureTime}</p>
           </div>
           <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 shadow-sm shrink-0">
             {/* Professional SVG Bus Icon instead of Emoji */}
@@ -144,6 +166,57 @@ export const PostTripFeedback = () => {
                 {ratingLabels[currentRating]}
               </span>
             )}
+          </div>
+        </div>
+
+        {/* Driver Rating Section */}
+        <div className={`transition-opacity duration-300 ${selectedRating ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 shrink-0">
+                <img src={trip.driver.photo} alt={trip.driver.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-slate-900">{trip.driver.name}</h2>
+                <p className="text-sm text-slate-500">Mã: {trip.driver.employeeCode}</p>
+              </div>
+            </div>
+            
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Đánh giá tài xế
+            </h3>
+
+            <div className="flex justify-center items-center gap-2 sm:gap-4 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={`driver-${star}`}
+                  onClick={() => setSelectedDriverRating(star)}
+                  onMouseEnter={() => setHoveredDriverRating(star)}
+                  onMouseLeave={() => setHoveredDriverRating(null)}
+                  className="transform transition-transform duration-200 hover:scale-110 focus:outline-none"
+                >
+                  <svg 
+                    className={`w-10 h-10 sm:w-12 sm:h-12 transition-colors duration-200 ${
+                      (hoveredDriverRating || selectedDriverRating) && star <= (hoveredDriverRating || selectedDriverRating)!
+                        ? "text-yellow-400 fill-current drop-shadow-sm"
+                        : "text-slate-200 fill-current"
+                    }`} 
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </button>
+              ))}
+            </div>
+            
+            {/* Dynamic Driver Rating Label */}
+            <div className="h-6 text-center">
+              {(hoveredDriverRating || selectedDriverRating) && (
+                <span className="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                  {ratingLabels[(hoveredDriverRating || selectedDriverRating)!]}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

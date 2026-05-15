@@ -1,58 +1,115 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { trips } from "@/data/trips";
 
-const mockDriverData = {
-  id: "TX001",
-  name: "Nguyễn Văn Minh",
-  photo: "https://i.pravatar.cc/150?img=68",
-  crewScore: 4.8,
-  totalTrips: 2847,
-  totalRatings: 2156,
-  employeeCode: "FUTA-TX-00123",
-  experience: "5 năm",
-  tags: [
-    { label: "Lái xe an toàn", count: 1892 },
-    { label: "Nhiệt tình", count: 1756 },
-    { label: "Đúng giờ", count: 1634 },
-    { label: "Xe sạch sẽ", count: 1456 },
-    { label: "Thân thiện", count: 1234 },
-  ],
-  ratingBreakdown: {
-    fiveStars: 1856,
-    fourStars: 234,
-    threeStars: 56,
-    twoStars: 8,
-    oneStar: 2,
-  },
-  recentReviews: [
-    {
-      id: 1,
-      customer: "Trần Thị Lan",
-      rating: 5,
-      date: "14/05/2026",
-      comment: "Tài xế rất nhiệt tình, lái xe an toàn, đúng giờ.",
-      tags: ["Lái xe an toàn", "Nhiệt tình"],
+const getDriverData = (driverId: string) => {
+  const driver = trips.find(t => t.driver.id === driverId)?.driver;
+  if (!driver) return null;
+
+  return {
+    id: driver.id,
+    name: driver.name,
+    photo: driver.photo,
+    crewScore: driver.crewScore,
+    totalTrips: driver.totalTrips,
+    totalRatings: driver.totalRatings,
+    employeeCode: driver.employeeCode,
+    experience: `${Math.floor(driver.totalTrips / 500)} năm`,
+    tags: [
+      { label: "Lái xe an toàn", count: Math.floor(driver.totalRatings * 0.88) },
+      { label: "Nhiệt tình", count: Math.floor(driver.totalRatings * 0.81) },
+      { label: "Đúng giờ", count: Math.floor(driver.totalRatings * 0.76) },
+      { label: "Xe sạch sẽ", count: Math.floor(driver.totalRatings * 0.68) },
+      { label: "Thân thiện", count: Math.floor(driver.totalRatings * 0.57) },
+    ],
+    ratingBreakdown: {
+      fiveStars: Math.floor(driver.totalRatings * 0.86),
+      fourStars: Math.floor(driver.totalRatings * 0.11),
+      threeStars: Math.floor(driver.totalRatings * 0.026),
+      twoStars: Math.floor(driver.totalRatings * 0.0037),
+      oneStar: Math.floor(driver.totalRatings * 0.0009),
     },
-    {
-      id: 2,
-      customer: "Lê Văn Hùng",
-      rating: 5,
-      date: "13/05/2026",
-      comment: "Xe sạch sẽ, tài xế thân thiện, sẽ tiếp tục ủng hộ.",
-      tags: ["Xe sạch sẽ", "Thân thiện"],
-    },
-    {
-      id: 3,
-      customer: "Phạm Thị Mai",
-      rating: 5,
-      date: "12/05/2026",
-      comment: "Đúng giờ tuyệt đối, dịch vụ rất tốt.",
-      tags: ["Đúng giờ", "Nhiệt tình"],
-    },
-  ],
+    recentReviews: [
+      {
+        id: 1,
+        customer: "Trần Thị Lan",
+        rating: 5,
+        date: "14/05/2026",
+        comment: "Tài xế rất nhiệt tình, lái xe an toàn, đúng giờ.",
+        tags: ["Lái xe an toàn", "Nhiệt tình"],
+      },
+      {
+        id: 2,
+        customer: "Lê Văn Hùng",
+        rating: 5,
+        date: "13/05/2026",
+        comment: "Xe sạch sẽ, tài xế thân thiện, sẽ tiếp tục ủng hộ.",
+        tags: ["Xe sạch sẽ", "Thân thiện"],
+      },
+      {
+        id: 3,
+        customer: "Phạm Thị Mai",
+        rating: 5,
+        date: "12/05/2026",
+        comment: "Đúng giờ tuyệt đối, dịch vụ rất tốt.",
+        tags: ["Đúng giờ", "Nhiệt tình"],
+      },
+    ],
+  };
 };
 
 export const CrewScoreDetail = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const mockDriverData = getDriverData(id || "TX001") || {
+    id: "TX001",
+    name: "Nguyễn Văn Minh",
+    photo: "https://i.pravatar.cc/150?img=68",
+    crewScore: 4.8,
+    totalTrips: 2847,
+    totalRatings: 2156,
+    employeeCode: "FUTA-TX-00123",
+    experience: "5 năm",
+    tags: [
+      { label: "Lái xe an toàn", count: 1892 },
+      { label: "Nhiệt tình", count: 1756 },
+      { label: "Đúng giờ", count: 1634 },
+      { label: "Xe sạch sẽ", count: 1456 },
+      { label: "Thân thiện", count: 1234 },
+    ],
+    ratingBreakdown: {
+      fiveStars: 1856,
+      fourStars: 234,
+      threeStars: 56,
+      twoStars: 8,
+      oneStar: 2,
+    },
+    recentReviews: [
+      {
+        id: 1,
+        customer: "Trần Thị Lan",
+        rating: 5,
+        date: "14/05/2026",
+        comment: "Tài xế rất nhiệt tình, lái xe an toàn, đúng giờ.",
+        tags: ["Lái xe an toàn", "Nhiệt tình"],
+      },
+      {
+        id: 2,
+        customer: "Lê Văn Hùng",
+        rating: 5,
+        date: "13/05/2026",
+        comment: "Xe sạch sẽ, tài xế thân thiện, sẽ tiếp tục ủng hộ.",
+        tags: ["Xe sạch sẽ", "Thân thiện"],
+      },
+      {
+        id: 3,
+        customer: "Phạm Thị Mai",
+        rating: 5,
+        date: "12/05/2026",
+        comment: "Đúng giờ tuyệt đối, dịch vụ rất tốt.",
+        tags: ["Đúng giờ", "Nhiệt tình"],
+      },
+    ],
+  };
 
   const ratingPercentages = {
     fiveStars: (mockDriverData.ratingBreakdown.fiveStars / mockDriverData.totalRatings) * 100,

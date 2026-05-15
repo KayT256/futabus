@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { trips } from "@/data/trips";
 
 type SeatStatus = "disabled" | "available" | "selected";
 
@@ -7,6 +8,119 @@ interface Seat {
   id: string;
   status: SeatStatus;
 }
+
+const generateRandomSeats = (tripId: string): (Seat | null)[][] => {
+  const seatIds = ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10", "A11", "A12", "A13", "A14", "A15", "A16", "A17"];
+  const seed = tripId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  const getRandomStatus = (index: number): SeatStatus => {
+    const random = (seed + index * 7) % 10;
+    if (random < 3) return "disabled";
+    if (random < 8) return "available";
+    return "disabled";
+  };
+
+  return [
+    [
+      { id: "A01", status: getRandomStatus(0) },
+      null,
+      null,
+      null,
+      { id: "A02", status: getRandomStatus(1) },
+    ],
+    [
+      { id: "A03", status: getRandomStatus(2) },
+      null,
+      { id: "A04", status: getRandomStatus(3) },
+      null,
+      { id: "A05", status: getRandomStatus(4) },
+    ],
+    [
+      { id: "A06", status: getRandomStatus(5) },
+      null,
+      { id: "A07", status: getRandomStatus(6) },
+      null,
+      { id: "A08", status: getRandomStatus(7) },
+    ],
+    [
+      { id: "A09", status: getRandomStatus(8) },
+      null,
+      { id: "A10", status: getRandomStatus(9) },
+      null,
+      { id: "A11", status: getRandomStatus(10) },
+    ],
+    [
+      { id: "A12", status: getRandomStatus(11) },
+      null,
+      { id: "A13", status: getRandomStatus(12) },
+      null,
+      { id: "A14", status: getRandomStatus(13) },
+    ],
+    [
+      { id: "A15", status: getRandomStatus(14) },
+      null,
+      { id: "A16", status: getRandomStatus(15) },
+      null,
+      { id: "A17", status: getRandomStatus(16) },
+    ],
+  ];
+};
+
+const generateRandomUpperSeats = (tripId: string): (Seat | null)[][] => {
+  const seed = tripId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + 100;
+  
+  const getRandomStatus = (index: number): SeatStatus => {
+    const random = (seed + index * 7) % 10;
+    if (random < 3) return "disabled";
+    if (random < 8) return "available";
+    return "disabled";
+  };
+
+  return [
+    [
+      { id: "B01", status: getRandomStatus(0) },
+      null,
+      null,
+      null,
+      { id: "B02", status: getRandomStatus(1) },
+    ],
+    [
+      { id: "B03", status: getRandomStatus(2) },
+      null,
+      { id: "B04", status: getRandomStatus(3) },
+      null,
+      { id: "B05", status: getRandomStatus(4) },
+    ],
+    [
+      { id: "B06", status: getRandomStatus(5) },
+      null,
+      { id: "B07", status: getRandomStatus(6) },
+      null,
+      { id: "B08", status: getRandomStatus(7) },
+    ],
+    [
+      { id: "B09", status: getRandomStatus(8) },
+      null,
+      { id: "B10", status: getRandomStatus(9) },
+      null,
+      { id: "B11", status: getRandomStatus(10) },
+    ],
+    [
+      { id: "B12", status: getRandomStatus(11) },
+      null,
+      { id: "B13", status: getRandomStatus(12) },
+      null,
+      { id: "B14", status: getRandomStatus(13) },
+    ],
+    [
+      { id: "B15", status: getRandomStatus(14) },
+      null,
+      { id: "B16", status: getRandomStatus(15) },
+      null,
+      { id: "B17", status: getRandomStatus(16) },
+    ],
+  ];
+};
 
 const lowerDeckSeats: (Seat | null)[][] = [
   [
@@ -170,12 +284,20 @@ const DeckTable = ({
 
 export const BookingPage = () => {
   const navigate = useNavigate();
-  const [lowerSeats, setLowerSeats] = useState(lowerDeckSeats);
-  const [upperSeats, setUpperSeats] = useState(upperDeckSeats);
+  const location = useLocation();
+  const trip = location.state?.trip || trips[0];
+  
+  const [lowerSeats, setLowerSeats] = useState(generateRandomSeats(trip.id));
+  const [upperSeats, setUpperSeats] = useState(generateRandomUpperSeats(trip.id));
   const [pickupType, setPickupType] = useState<"station" | "shuttle">("station");
   const [dropType, setDropType] = useState<"station" | "shuttle">("station");
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", email: "" });
   const [agreed, setAgreed] = useState(false);
+
+  useEffect(() => {
+    setLowerSeats(generateRandomSeats(trip.id));
+    setUpperSeats(generateRandomUpperSeats(trip.id));
+  }, [trip.id]);
 
   const toggleSeat = (
     decks: (Seat | null)[][],
@@ -200,7 +322,7 @@ export const BookingPage = () => {
   };
 
   const selectedSeats = getAllSelectedSeats();
-  const ticketPrice = 80000;
+  const ticketPrice = trip.price;
   const totalPrice = selectedSeats.length * ticketPrice;
 
   return (
@@ -414,15 +536,15 @@ export const BookingPage = () => {
                         </label>
                       </div>
                       <div className="flex w-full cursor-pointer items-center justify-between border border-gray-300 rounded px-3 py-2 text-[15px] bg-white">
-                        <span>Bến xe Miền Tây</span>
+                        <span>{trip.pickupStation}</span>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </div>
                       <div className="flex flex-wrap gap-1 text-sm">
                         <span>Quý khách vui lòng có mặt tại Bến xe/Văn Phòng</span>
-                        <span className="font-semibold">Bến xe Miền Tây</span>
-                        <span className="font-semibold text-red-500">Trước 11:45 15/05/2026</span>
+                        <span className="font-semibold">{trip.pickupStation}</span>
+                        <span className="font-semibold text-red-500">Trước {trip.pickupTime} {trip.date}</span>
                         <span>để được trung chuyển hoặc kiểm tra thông tin trước khi lên xe.</span>
                       </div>
                     </div>
@@ -443,7 +565,7 @@ export const BookingPage = () => {
                         </label>
                       </div>
                       <div className="flex w-full cursor-pointer items-center justify-between border border-gray-300 rounded px-3 py-2 text-[15px] bg-white">
-                        <span>Bến xe Cần Thơ</span>
+                        <span>{trip.dropoffStation}</span>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -506,7 +628,7 @@ export const BookingPage = () => {
               <p className="mb-4 flex items-center justify-between text-xl font-medium text-black">
                 <span className="flex items-center gap-2">Thông tin tài xế</span>
                 <button
-                  onClick={() => navigate('/crew-score/TX001')}
+                  onClick={() => navigate(`/crew-score/${trip.driver.id}`)}
                   className="text-base text-orange-500 underline cursor-pointer hover:text-orange-600"
                 >
                   Chi tiết
@@ -514,15 +636,15 @@ export const BookingPage = () => {
               </p>
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 shrink-0">
-                  <img src="https://i.pravatar.cc/150?img=68" alt="Tài xế" className="w-full h-full object-cover" />
+                  <img src={trip.driver.photo} alt="Tài xế" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-black">Nguyễn Văn Minh</p>
-                  <p className="text-sm text-gray-500">Mã: FUTA-TX-00123</p>
+                  <p className="font-semibold text-black">{trip.driver.name}</p>
+                  <p className="text-sm text-gray-500">Mã: {trip.driver.employeeCode}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-lg font-bold text-orange-500">4.8</span>
+                    <span className="text-lg font-bold text-orange-500">{trip.driver.crewScore}</span>
                     <span className="text-sm text-gray-400">/5</span>
-                    <span className="text-xs text-gray-500">(2,156 đánh giá)</span>
+                    <span className="text-xs text-gray-500">({trip.driver.totalRatings.toLocaleString("vi-VN")} đánh giá)</span>
                   </div>
                 </div>
               </div>
@@ -541,11 +663,11 @@ export const BookingPage = () => {
               </p>
               <div className="flex justify-between">
                 <span className="text-gray-500 w-20">Tuyến xe</span>
-                <span className="text-right text-black">Mien Tay - Can Tho</span>
+                <span className="text-right text-black">{trip.route}</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-gray-500">Thời gian xuất bến</span>
-                <span className="text-[#00613D]">12:00 15/05/2026</span>
+                <span className="text-[#00613D]">{trip.departureTime} {trip.date}</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
                 <span className="text-gray-500">Số lượng ghế</span>

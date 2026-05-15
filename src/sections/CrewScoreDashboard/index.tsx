@@ -1,74 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { trips } from "@/data/trips";
 
-const mockStaffData = [
-  {
-    id: "TX001",
-    name: "Nguyễn Văn Minh",
-    photo: "https://i.pravatar.cc/150?img=68",
-    crewScore: 4.9,
-    totalTrips: 2847,
-    totalRatings: 2156,
-    employeeCode: "FUTA-TX-00123",
-    status: "excellent",
-    scoreTrend: [4.7, 4.75, 4.8, 4.82, 4.85, 4.88, 4.9],
-  },
-  {
-    id: "TX002",
-    name: "Trần Thị Lan",
-    photo: "https://i.pravatar.cc/150?img=47",
-    crewScore: 4.8,
-    totalTrips: 2156,
-    totalRatings: 1834,
-    employeeCode: "FUTA-TX-00234",
-    status: "excellent",
-    scoreTrend: [4.6, 4.65, 4.7, 4.72, 4.75, 4.78, 4.8],
-  },
-  {
-    id: "TX003",
-    name: "Lê Văn Hùng",
-    photo: "https://i.pravatar.cc/150?img=52",
-    crewScore: 4.7,
-    totalTrips: 1923,
-    totalRatings: 1567,
-    employeeCode: "FUTA-TX-00345",
-    status: "good",
-    scoreTrend: [4.5, 4.55, 4.6, 4.62, 4.65, 4.68, 4.7],
-  },
-  {
-    id: "TX004",
-    name: "Phạm Thị Mai",
-    photo: "https://i.pravatar.cc/150?img=44",
-    crewScore: 4.6,
-    totalTrips: 1734,
-    totalRatings: 1423,
-    employeeCode: "FUTA-TX-00456",
-    status: "good",
-    scoreTrend: [4.4, 4.45, 4.5, 4.52, 4.55, 4.58, 4.6],
-  },
-  {
-    id: "TX005",
-    name: "Hoàng Văn Nam",
-    photo: "https://i.pravatar.cc/150?img=59",
-    crewScore: 4.5,
-    totalTrips: 1567,
-    totalRatings: 1234,
-    employeeCode: "FUTA-TX-00567",
-    status: "average",
-    scoreTrend: [4.3, 4.35, 4.4, 4.42, 4.45, 4.48, 4.5],
-  },
-  {
-    id: "TX006",
-    name: "Đỗ Thị Hương",
-    photo: "https://i.pravatar.cc/150?img=32",
-    crewScore: 4.4,
-    totalTrips: 1345,
-    totalRatings: 1089,
-    employeeCode: "FUTA-TX-00678",
-    status: "average",
-    scoreTrend: [4.2, 4.25, 4.3, 4.32, 4.35, 4.38, 4.4],
-  },
-];
+const mockStaffData = trips.map(trip => trip.driver);
 
 const monthlyTrendData = [
   { month: "T1", avgScore: 4.5, totalRatings: 12456 },
