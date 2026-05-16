@@ -5,6 +5,22 @@ const getDriverData = (driverId: string) => {
   const driver = trips.find(t => t.driver.id === driverId)?.driver;
   if (!driver) return null;
 
+  const scoreToFiveStarPercent = (score: number) => {
+    if (score >= 4.8) return 0.92;
+    if (score >= 4.7) return 0.88;
+    if (score >= 4.6) return 0.82;
+    if (score >= 4.5) return 0.75;
+    if (score >= 4.4) return 0.68;
+    return 0.60;
+  };
+
+  const fiveStarPercent = scoreToFiveStarPercent(driver.crewScore);
+  const remainingPercent = 1 - fiveStarPercent;
+  const fourStarPercent = remainingPercent * 0.7;
+  const threeStarPercent = remainingPercent * 0.2;
+  const twoStarPercent = remainingPercent * 0.08;
+  const oneStarPercent = remainingPercent * 0.02;
+
   return {
     id: driver.id,
     name: driver.name,
@@ -22,11 +38,11 @@ const getDriverData = (driverId: string) => {
       { label: "Thân thiện", count: Math.floor(driver.totalRatings * 0.57) },
     ],
     ratingBreakdown: {
-      fiveStars: Math.floor(driver.totalRatings * 0.86),
-      fourStars: Math.floor(driver.totalRatings * 0.11),
-      threeStars: Math.floor(driver.totalRatings * 0.026),
-      twoStars: Math.floor(driver.totalRatings * 0.0037),
-      oneStar: Math.floor(driver.totalRatings * 0.0009),
+      fiveStars: Math.floor(driver.totalRatings * fiveStarPercent),
+      fourStars: Math.floor(driver.totalRatings * fourStarPercent),
+      threeStars: Math.floor(driver.totalRatings * threeStarPercent),
+      twoStars: Math.floor(driver.totalRatings * twoStarPercent),
+      oneStar: Math.floor(driver.totalRatings * oneStarPercent),
     },
     recentReviews: driver.recentReviews,
   };
