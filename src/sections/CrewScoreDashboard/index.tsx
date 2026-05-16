@@ -325,7 +325,7 @@ export const CrewScoreDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
-                        onClick={() => navigate(`/crew-score/${staff.id}`)}
+                        onClick={() => navigate(`/crew-score/${staff.id}?from=dashboard`)}
                         className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-medium px-3 py-1.5 rounded-lg transition-colors"
                       >
                         Chi tiết
