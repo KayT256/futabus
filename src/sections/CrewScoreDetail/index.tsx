@@ -28,32 +28,7 @@ const getDriverData = (driverId: string) => {
       twoStars: Math.floor(driver.totalRatings * 0.0037),
       oneStar: Math.floor(driver.totalRatings * 0.0009),
     },
-    recentReviews: [
-      {
-        id: 1,
-        customer: "Trần Thị Lan",
-        rating: 5,
-        date: "14/05/2026",
-        comment: "Tài xế rất nhiệt tình, lái xe an toàn, đúng giờ.",
-        tags: ["Lái xe an toàn", "Nhiệt tình"],
-      },
-      {
-        id: 2,
-        customer: "Lê Văn Hùng",
-        rating: 5,
-        date: "13/05/2026",
-        comment: "Xe sạch sẽ, tài xế thân thiện, sẽ tiếp tục ủng hộ.",
-        tags: ["Xe sạch sẽ", "Thân thiện"],
-      },
-      {
-        id: 3,
-        customer: "Phạm Thị Mai",
-        rating: 5,
-        date: "12/05/2026",
-        comment: "Đúng giờ tuyệt đối, dịch vụ rất tốt.",
-        tags: ["Đúng giờ", "Nhiệt tình"],
-      },
-    ],
+    recentReviews: driver.recentReviews,
   };
 };
 
@@ -86,32 +61,7 @@ export const CrewScoreDetail = () => {
       twoStars: 8,
       oneStar: 2,
     },
-    recentReviews: [
-      {
-        id: 1,
-        customer: "Trần Thị Lan",
-        rating: 5,
-        date: "14/05/2026",
-        comment: "Tài xế rất nhiệt tình, lái xe an toàn, đúng giờ.",
-        tags: ["Lái xe an toàn", "Nhiệt tình"],
-      },
-      {
-        id: 2,
-        customer: "Lê Văn Hùng",
-        rating: 5,
-        date: "13/05/2026",
-        comment: "Xe sạch sẽ, tài xế thân thiện, sẽ tiếp tục ủng hộ.",
-        tags: ["Xe sạch sẽ", "Thân thiện"],
-      },
-      {
-        id: 3,
-        customer: "Phạm Thị Mai",
-        rating: 5,
-        date: "12/05/2026",
-        comment: "Đúng giờ tuyệt đối, dịch vụ rất tốt.",
-        tags: ["Đúng giờ", "Nhiệt tình"],
-      },
-    ],
+    recentReviews: trips[0].driver.recentReviews,
   };
 
   const ratingPercentages = {
