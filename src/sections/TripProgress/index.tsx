@@ -1,172 +1,456 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useJourney, PHASE_ORDER, PHASE_INFO, type JourneyPhase } from "@/contexts/JourneyContext";
+import { madaguiRestStop } from "@/data/restStop";
+
+// Journey Tracker — the user's home base while a journey is active.
+// 9 phases drive what the screen shows. The button labels change to reflect
+// where the user is, and phase-specific CTAs link to FUTA Rada / Terminal Map /
+// Quick Report / Smart Stop. The "[Demo] Bỏ qua" buttons are intentional — this is
+// a prototype and we need a way for stakeholders to step through phases without
+// waiting on real GPS / time elapses.
 
 export const TripProgress = () => {
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
+  const { activeJourney, advancePhase, endJourney } = useJourney();
 
-  // Simulate trip progress from 0 to 100 over ~10 seconds
+  // If the user lands here without an active journey (refresh after journey ended, shared URL, etc),
+  // send them home with a friendly toast instead of rendering a blank shell.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          return 100;
-        }
-        return prev + 1;
+    if (!activeJourney) {
+      toast.info("Bạn chưa có chuyến đang hoạt động");
+      navigate("/", { replace: true });
+    }
+  }, [activeJourney, navigate]);
+
+  // Show smart, context-aware toasts when entering certain phases.
+  // useEffect with phase dependency means it only fires once per phase transition.
+  useEffect(() => {
+    if (!activeJourney) return;
+    if (activeJourney.phase === "waiting_shuttle") {
+      const t = setTimeout(
+        () =>
+          toast.info("Xe trung chuyển đã được điều phối", {
+            description: "Tài xế xe trung chuyển sẽ đến trong ~8 phút",
+          }),
+        800,
+      );
+      return () => clearTimeout(t);
+    }
+    if (activeJourney.phase === "near_rest") {
+      toast("🍽️ Sắp đến trạm dừng Madagui", {
+        description: "Đặt đồ ăn trước để pickup nhanh khi xe dừng!",
+        duration: 6000,
       });
-    }, 100);
+    }
+    if (activeJourney.phase === "arrived") {
+      toast.success("Chuyến đi đã hoàn thành 🎉", {
+        description: "Hãy chia sẻ trải nghiệm với FUTA nhé",
+      });
+    }
+  }, [activeJourney?.phase, activeJourney]);
 
-    return () => clearInterval(timer);
-  }, []);
+  if (!activeJourney) return null;
 
-  const isFinished = progress === 100;
+  const { booking, phase, cart, pickedUp, foundBusAtTerminal } = activeJourney;
+  const { trip, seats } = booking;
+  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const phaseIdx = PHASE_ORDER.indexOf(phase);
+  const info = PHASE_INFO[phase as JourneyPhase];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      {/* Clean, Modern Header */}
+    <main className="min-h-screen bg-slate-50 pb-12">
+      {/* Header — close button takes the user home; the journey persists in context until completion. */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => navigate("/")}
             className="flex items-center text-slate-500 hover:text-slate-800 transition-colors p-2 -ml-2"
+            aria-label="Đóng"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
-          <span className="text-[15px] font-bold text-slate-900">
-            Hành trình của bạn
-          </span>
-          <div className="w-9" /> {/* Spacer for centering */}
+          <span className="text-[15px] font-bold text-slate-900">Hành trình của bạn</span>
+          <div className="w-9" />
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
-        
-        {/* Status Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-start justify-between mb-6">
+      <div className="max-w-3xl mx-auto px-4 mt-4 space-y-4">
+        {/* Trip header card with phase strip */}
+        <section className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xl font-bold text-slate-900 mb-1">
-                Chuyến đi Đà Lạt
-              </p>
-              <p className="text-sm font-medium text-slate-500">
-                15/05/2026 • 23:30
-              </p>
+              <div className="text-xs text-slate-500">MÃ VÉ</div>
+              <div className="font-semibold tracking-wide">FUTA{trip.id}</div>
             </div>
-            <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
-              isFinished 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                : 'bg-blue-50 text-blue-700 border-blue-200'
-            }`}>
-              {isFinished ? 'Đã hoàn thành' : 'Đang di chuyển'}
+            <div className="text-right text-sm">
+              <div className="text-slate-500 text-xs">{trip.route}</div>
+              <div className="font-semibold">
+                {trip.departureTime} · {trip.date} · Ghế {seats.join(", ")}
+              </div>
             </div>
           </div>
 
-          {/* Animated Progress Bar */}
-          <div className="relative mb-8">
-            <div className="flex justify-between text-xs font-semibold text-slate-400 mb-2">
-              <span>Khởi hành</span>
-              <span>Đích đến</span>
+          {/* Phase progress strip — 9 dots, completed ones in green, current in orange. */}
+          <div className="mt-5">
+            <div className="flex items-center gap-1 overflow-x-auto pb-2">
+              {PHASE_ORDER.map((p, i) => (
+                <div key={p} className="flex items-center gap-1 shrink-0">
+                  <div
+                    className={`w-6 h-6 rounded-full grid place-items-center text-[10px] font-semibold transition-colors ${
+                      i < phaseIdx
+                        ? "bg-emerald-600 text-white"
+                        : i === phaseIdx
+                          ? "bg-orange-500 text-white"
+                          : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {i < phaseIdx ? "✓" : i + 1}
+                  </div>
+                  {i < PHASE_ORDER.length - 1 && (
+                    <div className={`w-6 h-0.5 ${i < phaseIdx ? "bg-emerald-600" : "bg-slate-100"}`} />
+                  )}
+                </div>
+              ))}
             </div>
-            
-            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden relative">
-              <div 
-                className={`h-full rounded-full transition-all duration-200 ease-linear ${isFinished ? 'bg-emerald-500' : 'bg-orange-500'}`}
-                style={{ width: `${progress}%` }}
+            <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{info.emoji}</div>
+                <div>
+                  <div className="font-semibold text-slate-900">{info.label}</div>
+                  <div className="text-xs text-slate-500">{info.sub}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Driver + Crew quick chips with call buttons. */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { person: trip.driver, label: "Tài xế", rating: trip.driver.crewScore },
+              { person: trip.crew, label: "Phụ xe", rating: trip.crew.rating },
+            ].map(({ person, label, rating }) => (
+              <div key={person.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-200 shrink-0">
+                  <img src={person.photo} alt={label} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-slate-500">{label}</div>
+                  <div className="font-medium text-sm truncate text-slate-900">{person.name}</div>
+                  <div className="text-[11px] text-orange-600 flex items-center gap-1">⭐ {rating}</div>
+                </div>
+                <button
+                  onClick={() => toast.info(`Đang gọi ${label.toLowerCase()}... (demo)`)}
+                  className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100"
+                  aria-label={`Gọi ${label}`}
+                >
+                  📞
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Phase-specific actions ─────────────────────────────────────── */}
+        <section className="space-y-3">
+          {phase === "waiting_shuttle" && (
+            <>
+              <ActionBtn
+                icon="📡"
+                title="Theo dõi vị trí xe trung chuyển"
+                desc="Mở FUTA Rada — xem xe đến gần bạn"
+                onClick={() => navigate("/futa-rada")}
+                primary
               />
-            </div>
-            
-            {/* Moving Bus Icon */}
-            <div 
-              className="absolute top-[22px] -translate-y-1/2 transition-all duration-200 ease-linear shadow-sm bg-white p-1.5 rounded-full border border-slate-200 z-10"
-              style={{ left: `calc(${progress}% - 16px)` }}
-            >
-              <svg className={`w-5 h-5 ${isFinished ? 'text-emerald-500' : 'text-orange-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Vehicle Info */}
-          <div className="flex gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
-              <img src="https://i.pravatar.cc/150?img=68" alt="Tài xế" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-slate-900">Tài xế: Nguyễn Văn Minh</p>
-              <p className="text-xs text-slate-500 mt-0.5">Biển số: <span className="font-semibold text-slate-700">51B - 123.45</span></p>
-            </div>
-          </div>
-        </div>
-
-        {/* Dynamic Timeline */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-base font-bold text-slate-900 mb-6">Lịch trình chi tiết</h3>
-          
-          <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
-            
-            {/* Step 1: Start */}
-            <div className="relative pl-6">
-              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white bg-orange-500 shadow-sm" />
-              <div>
-                <p className="text-sm font-bold text-slate-900">Bến xe Miền Đông</p>
-                <p className="text-xs text-slate-500 mt-1">Đã khởi hành lúc 23:30</p>
-              </div>
-            </div>
-
-            {/* Step 2: Intermediate */}
-            <div className="relative pl-6">
-              <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm transition-colors duration-300 ${progress >= 50 ? 'bg-orange-500' : 'bg-slate-200'}`} />
-              <div>
-                <p className={`text-sm font-bold transition-colors ${progress >= 50 ? 'text-slate-900' : 'text-slate-400'}`}>
-                  Trạm dừng chân Madagui
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {progress >= 50 ? 'Đã đi qua lúc 02:15' : 'Dự kiến 02:15'}
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3: End */}
-            <div className="relative pl-6">
-              <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm transition-colors duration-300 ${progress >= 100 ? 'bg-emerald-500' : 'bg-slate-200'}`} />
-              <div>
-                <p className={`text-sm font-bold transition-colors ${progress >= 100 ? 'text-slate-900' : 'text-slate-400'}`}>
-                  Bến xe Đà Lạt
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {progress >= 100 ? 'Đã đến nơi lúc 05:45' : 'Dự kiến 05:45'}
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Dynamic Action Button */}
-        <div className="pt-4 pb-8 h-24">
-          <button
-            onClick={() => navigate('/post-trip-feedback')}
-            className={`w-full py-4 rounded-xl font-bold text-base transition-all duration-500 ${
-              isFinished 
-                ? 'opacity-100 translate-y-0 bg-orange-500 text-white shadow-md hover:bg-orange-600 hover:shadow-lg transform hover:-translate-y-0.5 pointer-events-auto' 
-                : 'opacity-0 translate-y-4 pointer-events-none absolute'
-            }`}
-          >
-            Đánh giá chuyến đi
-          </button>
-          
-          {/* Subtle note while waiting (Optional) */}
-          {!isFinished && (
-            <p className="text-center text-sm font-medium text-slate-400 animate-pulse mt-4">
-              Đang cập nhật vị trí... ({progress}%)
-            </p>
+              <button onClick={advancePhase} className="text-xs text-slate-400 underline">
+                [Demo] Bỏ qua bước này
+              </button>
+            </>
           )}
-        </div>
 
-      </main>
+          {phase === "shuttle_onboard" && (
+            <>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
+                ✅ Bạn đang trên xe trung chuyển. Dự kiến tới bến trong 12 phút.
+              </div>
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Đã đến bến
+              </button>
+            </>
+          )}
+
+          {phase === "at_terminal" && !foundBusAtTerminal && (
+            <>
+              <ActionBtn
+                icon="🗺️"
+                title="Tìm xe của tôi tại bến"
+                desc="Bản đồ chỉ đường tới đúng vị trí xe Limousine"
+                onClick={() => navigate("/terminal-map")}
+                primary
+              />
+              <button onClick={advancePhase} className="text-xs text-slate-400 underline">
+                [Demo] Đã tự tìm thấy
+              </button>
+            </>
+          )}
+
+          {phase === "at_terminal" && foundBusAtTerminal && (
+            <>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
+                ✅ Đã tìm thấy xe của bạn tại bãi đỗ. Bước tiếp theo: đưa mã QR vé cho nhân viên.
+              </div>
+              <ActionBtn
+                icon="🎫"
+                title="Xem thông tin chi tiết vé"
+                desc="Hiện mã QR để nhân viên quét — xác nhận lên xe"
+                onClick={() => navigate("/ticket", { state: { from: "journey" } })}
+                primary
+              />
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                ✓ Lên xe thành công
+              </button>
+            </>
+          )}
+
+          {phase === "boarded" && (
+            <>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
+                ✅ Đã lên xe {trip.busType} — ghế {seats.join(", ")}. Chúc bạn hành trình vui vẻ!
+              </div>
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Xe đã khởi hành
+              </button>
+            </>
+          )}
+
+          {phase === "in_transit" && (
+            <>
+              <RouteVisual progress={0.35} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ActionBtn
+                  icon="⚠️"
+                  title="Quick Report"
+                  desc="Báo cáo vấn đề trên xe"
+                  onClick={() => navigate("/quick-report")}
+                  compact
+                />
+                <ActionBtn
+                  icon="📞"
+                  title="Gọi hotline"
+                  desc="1900 6067 hỗ trợ 24/7"
+                  onClick={() => toast.info("Đang kết nối hotline 1900 6067")}
+                  compact
+                />
+              </div>
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Sắp đến trạm dừng (demo)
+              </button>
+            </>
+          )}
+
+          {phase === "near_rest" && (
+            <>
+              <RouteVisual progress={0.55} highlightRest />
+              <ActionBtn
+                icon="🍽️"
+                title="Đặt món tại trạm dừng"
+                desc="Smart Stop — pickup bằng QR khi xe dừng"
+                onClick={() => navigate("/smart-stop")}
+                badge={cartCount > 0 ? `${cartCount} món` : undefined}
+                primary
+              />
+              <ActionBtn
+                icon="⚠️"
+                title="Quick Report"
+                desc="Báo cáo vấn đề trên xe"
+                onClick={() => navigate("/quick-report")}
+                compact
+              />
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Đã đến {madaguiRestStop.name}
+              </button>
+            </>
+          )}
+
+          {phase === "at_rest" && (
+            <>
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                ⏰ Xe dừng tại Madagui trong <b>{madaguiRestStop.durationMinutes} phút</b>. Hãy pickup đơn hàng của
+                bạn!
+              </div>
+              {cartCount > 0 ? (
+                <ActionBtn
+                  icon="🎫"
+                  title={pickedUp ? "Đã pickup đơn ✓" : "Mở QR pickup đơn hàng"}
+                  desc={pickedUp ? "Chúc bạn ăn ngon miệng!" : "Quẹt mã tại quầy Smart Stop"}
+                  onClick={() => navigate("/smart-stop")}
+                  primary
+                />
+              ) : (
+                <ActionBtn
+                  icon="🍽️"
+                  title="Đặt món nhanh"
+                  desc="Vẫn còn thời gian — đặt và pickup tại quầy"
+                  onClick={() => navigate("/smart-stop")}
+                  primary
+                />
+              )}
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Xe tiếp tục khởi hành
+              </button>
+            </>
+          )}
+
+          {phase === "resuming" && (
+            <>
+              <RouteVisual progress={0.78} />
+              <ActionBtn
+                icon="⚠️"
+                title="Quick Report"
+                desc="Báo cáo vấn đề trên xe"
+                onClick={() => navigate("/quick-report")}
+                compact
+              />
+              <button
+                onClick={advancePhase}
+                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+              >
+                Đã đến Đà Lạt
+              </button>
+            </>
+          )}
+
+          {phase === "arrived" && (
+            <>
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                <div className="text-4xl mb-1">🎉</div>
+                <div className="font-semibold text-slate-900">Chuyến đi đã hoàn thành!</div>
+                <div className="text-xs text-slate-500 mt-1">
+                  Hy vọng bạn có một hành trình tuyệt vời cùng FUTA Bus Lines
+                </div>
+              </div>
+              <ActionBtn
+                icon="⭐"
+                title="Đánh giá chuyến đi"
+                desc="Chia sẻ trải nghiệm với tài xế & phụ xe"
+                onClick={() => navigate("/post-trip-feedback", { state: { trip } })}
+                primary
+              />
+              <button
+                onClick={() => {
+                  endJourney();
+                  navigate("/");
+                  toast.success("Đã kết thúc hành trình");
+                }}
+                className="w-full py-3 rounded-full border border-slate-300 text-slate-700 font-medium hover:bg-slate-50"
+              >
+                Đóng hành trình
+              </button>
+            </>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+};
+
+// Reusable action button used by phase-specific CTAs. The `primary` variant is the
+// big orange one, `compact` is the smaller side-by-side variant for secondary actions.
+const ActionBtn = ({
+  icon,
+  title,
+  desc,
+  onClick,
+  badge,
+  compact,
+}: {
+  icon: string;
+  title: string;
+  desc: string;
+  onClick: () => void;
+  badge?: string;
+  compact?: boolean;
+  primary?: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    className="w-full flex items-center gap-3 p-4 border border-orange-200 bg-orange-50/60 rounded-xl text-left hover:bg-orange-50 transition"
+  >
+    <div className="w-10 h-10 rounded-lg bg-orange-500 text-white grid place-items-center text-lg flex-shrink-0">
+      {icon}
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="font-semibold text-sm flex items-center gap-2 text-slate-900">
+        {title}
+        {badge && <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full">{badge}</span>}
+      </div>
+      <div className={`text-xs text-slate-500 ${compact ? "line-clamp-1" : ""}`}>{desc}</div>
+    </div>
+    <span className="text-orange-500 text-lg">→</span>
+  </button>
+);
+
+// Visualizes the bus's progress along the TPHCM → Đà Lạt route (304 km).
+// Highlights Madagui rest stop at ~55% of the route when `highlightRest` is on.
+const RouteVisual = ({ progress, highlightRest }: { progress: number; highlightRest?: boolean }) => {
+  const totalKm = 304;
+  return (
+    <div className="p-4 rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center justify-between text-xs mb-2">
+        <span className="font-medium text-slate-900">TP.HCM</span>
+        <span className="text-slate-500">
+          {Math.round(progress * totalKm)} / {totalKm} km
+        </span>
+        <span className="font-medium text-slate-900">Đà Lạt</span>
+      </div>
+      <div className="relative h-2 bg-slate-100 rounded-full">
+        <div
+          className="absolute left-0 top-0 h-full bg-orange-500 rounded-full transition-all"
+          style={{ width: `${progress * 100}%` }}
+        />
+        <div
+          className={`absolute top-1/2 -translate-y-1/2 left-[55%] w-3 h-3 rounded-full ${
+            highlightRest ? "bg-amber-500 animate-pulse" : "bg-slate-400"
+          }`}
+          title="Trạm Madagui"
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all"
+          style={{ left: `${progress * 100}%` }}
+        >
+          <div className="w-5 h-5 rounded-full bg-white border-2 border-orange-500 grid place-items-center text-[10px]">
+            🚌
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 flex justify-between text-[10px] text-slate-500">
+        <span>0 km</span>
+        <span className={highlightRest ? "text-amber-600 font-medium" : ""}>
+          {madaguiRestStop.name} 165km
+        </span>
+        <span>{totalKm} km</span>
+      </div>
     </div>
   );
 };
