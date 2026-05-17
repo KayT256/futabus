@@ -1,6 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { trips } from "@/data/trips";
+import type { PickupType, DropoffType } from "@/contexts/JourneyContext";
+
+// Points the user can pick from for each pickup mode.
+// Real FUTA has many more points but these cover the demo flow nicely.
+const PICKUP_POINTS: Record<PickupType, string[]> = {
+  terminal: ["Bến xe Miền Tây", "Bến xe Miền Đông Mới", "Bến xe An Sương"],
+  shuttle: [
+    "72 Trần Hưng Đạo, Q.1",
+    "189 Nguyễn Thị Minh Khai, Q.3",
+    "Vincom Thảo Điền, TP. Thủ Đức",
+    "Aeon Tân Phú",
+  ],
+  office: [
+    "VP FUTA Quận 1 — 272 Đề Thám",
+    "VP FUTA Tân Bình — 391 Lê Văn Sỹ",
+    "VP FUTA Bình Thạnh — 86 Đinh Bộ Lĩnh",
+  ],
+};
+
+const DROPOFF_POINTS: Record<DropoffType, string[]> = {
+  terminal: ["Bến xe Đà Lạt"],
+  shuttle: ["Chợ Đà Lạt", "Hồ Xuân Hương", "Khách sạn TTC Premium", "Quảng trường Lâm Viên"],
+};
 
 type SeatStatus = "disabled" | "available" | "selected";
 
@@ -291,8 +315,14 @@ export const BookingPage = () => {
   
   const [lowerSeats, setLowerSeats] = useState(generateRandomSeats(trip.id));
   const [upperSeats, setUpperSeats] = useState(generateRandomUpperSeats(trip.id));
-  const [pickupType, setPickupType] = useState<"station" | "shuttle">("station");
-  const [dropType, setDropType] = useState<"station" | "shuttle">("station");
+  // Default to terminal-pickup matched to whichever bến the trip departs from.
+  // Falls back to the first option if the trip's terminal isn't in the dropdown.
+  const defaultPickupPoint =
+    PICKUP_POINTS.terminal.find((p) => p === trip.pickupTerminal) ?? PICKUP_POINTS.terminal[0];
+  const [pickupType, setPickupType] = useState<PickupType>("terminal");
+  const [pickupPoint, setPickupPoint] = useState<string>(defaultPickupPoint);
+  const [dropoffType, setDropoffType] = useState<DropoffType>("terminal");
+  const [dropoffPoint, setDropoffPoint] = useState<string>(DROPOFF_POINTS.terminal[0]);
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", email: "" });
   const [agreed, setAgreed] = useState(false);
 
@@ -300,6 +330,39 @@ export const BookingPage = () => {
     setLowerSeats(generateRandomSeats(trip.id));
     setUpperSeats(generateRandomUpperSeats(trip.id));
   }, [trip.id]);
+
+  // When the user switches pickup mode, reset the point to the first option of the new mode
+  // so the dropdown never shows a stale value from a different list.
+  const handlePickupTypeChange = (next: PickupType) => {
+    setPickupType(next);
+    setPickupPoint(PICKUP_POINTS[next][0]);
+  };
+
+  const handleDropoffTypeChange = (next: DropoffType) => {
+    setDropoffType(next);
+    setDropoffPoint(DROPOFF_POINTS[next][0]);
+  };
+
+  const goToPayment = () => {
+    if (!agreed) {
+      toast.error("Vui lòng đồng ý điều khoản trước khi thanh toán");
+      return;
+    }
+    if (selectedSeats.length === 0) {
+      toast.error("Vui lòng chọn ghế");
+      return;
+    }
+    // Pass the booking context via router state — keeps the URL clean and avoids URL-encoding
+    // long Vietnamese pickup-point strings.
+    navigate("/payment", {
+      state: {
+        tripId: trip.id,
+        seats: selectedSeats,
+        pickup: { pickupType, pickupPoint, dropoffType, dropoffPoint },
+        customer: customerForm,
+      },
+    });
+  };
 
   const toggleSeat = (
     decks: (Seat | null)[][],
@@ -524,53 +587,113 @@ export const BookingPage = () => {
                   </div>
 
                   <div className="mt-6 flex flex-col md:flex-row gap-6">
-                    {/* Pickup */}
+                    {/* Pickup — 3-way: Bến xe / Trung chuyển / Văn phòng.
+                        Choosing trung chuyển/văn phòng unlocks FUTA Rada later in the journey. */}
                     <div className="flex flex-1 flex-col gap-4">
                       <span className="text-base font-medium uppercase">Điểm đón</span>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-1 cursor-pointer text-sm">
-                          <input type="radio" name="pickup" checked={pickupType === "station"} onChange={() => setPickupType("station")} className="accent-orange-500" />
-                          Bến xe/VP
-                        </label>
-                        <label className="flex items-center gap-1 cursor-pointer text-sm">
-                          <input type="radio" name="pickup" checked={pickupType === "shuttle"} onChange={() => setPickupType("shuttle")} className="accent-orange-500" />
-                          Trung chuyển
-                        </label>
+                      <div className="flex flex-wrap gap-2">
+                        {([
+                          { id: "terminal", label: "Bến xe / VP" },
+                          { id: "shuttle", label: "Trung chuyển" },
+                          { id: "office", label: "Văn phòng FUTA" },
+                        ] as const).map((opt) => {
+                          const active = pickupType === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => handlePickupTypeChange(opt.id)}
+                              className={`text-sm px-3 py-1.5 rounded-full border transition ${
+                                active
+                                  ? "bg-orange-50 border-orange-500 text-orange-600 font-medium"
+                                  : "border-gray-300 text-gray-700 hover:border-orange-300"
+                              }`}
+                            >
+                              <span
+                                className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                                style={{ background: active ? "#f97316" : "#d1d5db" }}
+                              />
+                              {opt.label}
+                            </button>
+                          );
+                        })}
                       </div>
-                      <div className="flex w-full cursor-pointer items-center justify-between border border-gray-300 rounded px-3 py-2 text-[15px] bg-white">
-                        <span>{trip.pickupStation}</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-wrap gap-1 text-sm">
-                        <span>Quý khách vui lòng có mặt tại Bến xe/Văn Phòng</span>
-                        <span className="font-semibold">{trip.pickupStation}</span>
-                        <span className="font-semibold text-red-500">Trước {trip.pickupTime} {trip.date}</span>
-                        <span>để được trung chuyển hoặc kiểm tra thông tin trước khi lên xe.</span>
+                      <select
+                        value={pickupPoint}
+                        onChange={(e) => setPickupPoint(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-[15px] bg-white"
+                      >
+                        {PICKUP_POINTS[pickupType].map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="text-xs text-gray-600 leading-relaxed">
+                        {pickupType === "terminal" ? (
+                          <>
+                            🗺️ Có mặt tại <b>{pickupPoint}</b> trước{" "}
+                            <span className="font-semibold text-red-500">
+                              {trip.pickupTime} {trip.date}
+                            </span>
+                            . Sau khi đặt vé, hệ thống sẽ hiện <b className="text-orange-600">bản đồ chỉ đường</b> tới
+                            đúng vị trí xe Limousine.
+                          </>
+                        ) : (
+                          <>
+                            🚐 Sau khi đặt vé, mở <b className="text-orange-600">FUTA Rada</b> để theo dõi xe trung
+                            chuyển đến đón bạn theo thời gian thực.
+                          </>
+                        )}
                       </div>
                     </div>
 
                     <div className="hidden md:block h-full w-[1px] border-r border-gray-200" />
 
-                    {/* Drop-off */}
+                    {/* Drop-off — 2-way: Bến xe / Trung chuyển. */}
                     <div className="flex flex-1 flex-col gap-4">
                       <span className="text-base font-medium uppercase">Điểm trả</span>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-1 cursor-pointer text-sm">
-                          <input type="radio" name="drop" checked={dropType === "station"} onChange={() => setDropType("station")} className="accent-orange-500" />
-                          Bến xe/VP
-                        </label>
-                        <label className="flex items-center gap-1 cursor-pointer text-sm">
-                          <input type="radio" name="drop" checked={dropType === "shuttle"} onChange={() => setDropType("shuttle")} className="accent-orange-500" />
-                          Trung chuyển
-                        </label>
+                      <div className="flex flex-wrap gap-2">
+                        {([
+                          { id: "terminal", label: "Bến xe / VP" },
+                          { id: "shuttle", label: "Trung chuyển" },
+                        ] as const).map((opt) => {
+                          const active = dropoffType === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => handleDropoffTypeChange(opt.id)}
+                              className={`text-sm px-3 py-1.5 rounded-full border transition ${
+                                active
+                                  ? "bg-orange-50 border-orange-500 text-orange-600 font-medium"
+                                  : "border-gray-300 text-gray-700 hover:border-orange-300"
+                              }`}
+                            >
+                              <span
+                                className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle"
+                                style={{ background: active ? "#f97316" : "#d1d5db" }}
+                              />
+                              {opt.label}
+                            </button>
+                          );
+                        })}
                       </div>
-                      <div className="flex w-full cursor-pointer items-center justify-between border border-gray-300 rounded px-3 py-2 text-[15px] bg-white">
-                        <span>{trip.dropoffStation}</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                      <select
+                        value={dropoffPoint}
+                        onChange={(e) => setDropoffPoint(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-[15px] bg-white"
+                      >
+                        {DROPOFF_POINTS[dropoffType].map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="text-xs text-gray-600 leading-relaxed">
+                        {dropoffType === "terminal"
+                          ? "🏁 Kết thúc hành trình ngay tại bến Đà Lạt."
+                          : "🚐 Xe trung chuyển sẽ đưa bạn từ bến Đà Lạt tới điểm trả miễn phí."}
                       </div>
                     </div>
                   </div>
@@ -604,6 +727,7 @@ export const BookingPage = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={goToPayment}
                     className="rounded-full bg-orange-500 px-6 sm:px-8 py-2 text-sm font-medium text-white hover:bg-orange-600 transition disabled:opacity-50"
                     disabled={!agreed || selectedSeats.length === 0}
                   >
@@ -654,6 +778,37 @@ export const BookingPage = () => {
                 <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">🛡️ Lái xe an toàn</span>
                 <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">😊 Nhiệt tình</span>
                 <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">⏰ Đúng giờ</span>
+              </div>
+            </div>
+
+            {/* Crew (phụ xe) Info — mirrors the driver card so users can vet both staff before booking. */}
+            <div className="w-full md:flex-1 lg:flex-none rounded-xl border border-[#DDE2E8] bg-white px-4 py-3 text-[15px]">
+              <p className="mb-4 flex items-center justify-between text-xl font-medium text-black">
+                <span className="flex items-center gap-2">Thông tin phụ xe</span>
+                <span className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">
+                  Hỗ trợ hành khách
+                </span>
+              </p>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-500 shrink-0">
+                  <img src={trip.crew.photo} alt="Phụ xe" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-black">{trip.crew.name}</p>
+                  <p className="text-sm text-gray-500">{trip.crew.yearsOfExperience} năm kinh nghiệm</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-lg font-bold text-orange-500">{trip.crew.rating}</span>
+                    <span className="text-sm text-gray-400">/5</span>
+                    <span className="text-xs text-gray-500">({trip.crew.totalRatings.toLocaleString("vi-VN")} đánh giá)</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {trip.crew.badges.map((b) => (
+                  <span key={b} className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
+                    🛡️ {b}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -740,6 +895,7 @@ export const BookingPage = () => {
           </button>
           <button
             type="button"
+            onClick={goToPayment}
             className="rounded-full bg-orange-500 px-5 py-2 text-sm font-medium text-white hover:bg-orange-600 transition disabled:opacity-50"
             disabled={!agreed || selectedSeats.length === 0}
           >
