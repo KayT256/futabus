@@ -12,6 +12,7 @@ import { FutaRada } from "@/sections/FutaRada";
 import { TerminalMap } from "@/sections/TerminalMap";
 import { QuickReport } from "@/sections/QuickReport";
 import { SmartStop } from "@/sections/SmartStop";
+import { FUTAPay } from "@/sections/FUTAPay";
 import { CrewScoreDetail } from "@/sections/CrewScoreDetail";
 import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
@@ -36,6 +37,7 @@ export const App = () => {
             <Route path="/terminal-map" element={<TerminalMap />} />
             <Route path="/quick-report" element={<QuickReport />} />
             <Route path="/smart-stop" element={<SmartStop />} />
+            <Route path="/futapay" element={<FUTAPay />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />
