@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useJourney, PHASE_ORDER, PHASE_INFO, type JourneyPhase } from "@/contexts/JourneyContext";
 import { madaguiRestStop } from "@/data/restStop";
+import { PageShell } from "@/components/PageShell";
 
 // Journey Tracker — the user's home base while a journey is active.
 // 9 phases drive what the screen shows. The button labels change to reflect
@@ -60,25 +61,8 @@ export const TripProgress = () => {
   const info = PHASE_INFO[phase as JourneyPhase];
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-12">
-      {/* Header — close button takes the user home; the journey persists in context until completion. */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center text-slate-500 hover:text-slate-800 transition-colors p-2 -ml-2"
-            aria-label="Đóng"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-          <span className="text-[15px] font-bold text-slate-900">Hành trình của bạn</span>
-          <div className="w-9" />
-        </div>
-      </header>
-
-      <div className="max-w-3xl mx-auto px-4 mt-4 space-y-4">
+    <PageShell title="Hành trình của bạn" backTo="/" width="wide">
+      <div className="max-w-3xl mx-auto space-y-4">
         {/* Trip header card with phase strip */}
         <section className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -371,7 +355,7 @@ export const TripProgress = () => {
           )}
         </section>
       </div>
-    </main>
+    </PageShell>
   );
 };
 

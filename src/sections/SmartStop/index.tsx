@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { useWallet } from "@/contexts/WalletContext";
 import { TopUpSheet } from "@/components/TopUpSheet";
+import { PageShell } from "@/components/PageShell";
 import { foodMenu, foodCategories, getFoodById, type FoodCategory } from "@/data/foodMenu";
 import { madaguiRestStop } from "@/data/restStop";
 import { wallets, type WalletId } from "@/data/wallets";
@@ -96,27 +97,12 @@ export const SmartStop = () => {
     seat: booking.seats[0],
   });
 
-  // QR pickup view ───────────────────────────────────────────────
+  // QR pickup view ──────────────────────────────
   if (view === "qr") {
     return (
-      <main className="min-h-screen bg-slate-50 pb-12">
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-          <div className="max-w-md mx-auto px-4 h-14 flex items-center">
-            <button
-              onClick={() => navigate("/trip-progress")}
-              className="flex items-center gap-2 text-slate-700 hover:text-orange-500"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="text-sm font-medium">Quay lại</span>
-            </button>
-            <span className="ml-3 text-base font-semibold text-slate-900">Smart Stop · Pickup QR</span>
-          </div>
-        </header>
-
-        <div className="max-w-md mx-auto px-4 pt-4">
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 text-center shadow-sm">
+      <PageShell title="Smart Stop · Pickup QR" backTo="/trip-progress" width="wide">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-6 text-center shadow-sm">
             <div className="text-xs text-slate-500">MÃ PICKUP</div>
             <div className="text-xl font-bold mt-1 text-slate-900">{orderCode}</div>
             <div className="mx-auto mt-4 w-48 h-48 rounded-lg border-4 border-orange-500 p-2 bg-white grid place-items-center">
@@ -182,16 +168,16 @@ export const SmartStop = () => {
             </div>
           )}
         </div>
-      </main>
+      </PageShell>
     );
   }
 
   // Payment confirm view (lightweight — full SmartPay is elsewhere) ───
   if (view === "pay") {
     return (
-      <main className="min-h-screen bg-slate-50 pb-12">
-        <div className="max-w-md mx-auto px-4 pt-4">
-          <div className="bg-white rounded-3xl border border-slate-200 p-5">
+      <PageShell title="Smart Stop · Thanh toán" backTo="/trip-progress" width="wide">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-5">
             <button
               onClick={() => setView("cart")}
               className="text-xs text-slate-500 flex items-center gap-1 mb-3 hover:text-orange-500"
@@ -290,16 +276,16 @@ export const SmartStop = () => {
             }}
           />
         )}
-      </main>
+      </PageShell>
     );
   }
 
   // Cart view ───────────────────────────────────────────────────
   if (view === "cart") {
     return (
-      <main className="min-h-screen bg-slate-50 pb-24">
-        <div className="max-w-md mx-auto px-4 pt-4">
-          <div className="bg-white rounded-3xl border border-slate-200 p-5">
+      <PageShell title="Smart Stop · Giỏ hàng" backTo="/trip-progress" width="wide">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-5">
             <button
               onClick={() => setView("menu")}
               className="text-xs text-slate-500 flex items-center gap-1 mb-3 hover:text-orange-500"
@@ -360,28 +346,24 @@ export const SmartStop = () => {
             </button>
           </div>
         </div>
-      </main>
+      </PageShell>
     );
   }
 
   // Menu view (default) ────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-slate-50 pb-24">
-      <div className="max-w-md mx-auto px-4 pt-4">
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-          <div className="p-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🍽️</span>
-              <div className="font-semibold flex-1">Smart Stop — {madaguiRestStop.name}</div>
-              <button
-                onClick={() => navigate("/trip-progress")}
-                className="w-7 h-7 rounded-full bg-white/20 grid place-items-center hover:bg-white/30"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
+    <PageShell title="Smart Stop" backTo="/trip-progress" width="wide" bottomPadding="sticky">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+          {/* Amber rest-stop hero — lives inside the card (chrome is neutral via PageShell). */}
+          <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/30 grid place-items-center text-xl shrink-0">🍽️</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold truncate">{madaguiRestStop.name}</div>
+                <div className="text-xs text-white/90 truncate">Đặt trước · Pickup bằng QR · Không chờ đợi</div>
+              </div>
             </div>
-            <div className="text-xs opacity-90 mt-1">Đặt trước · Pickup bằng QR · Không chờ đợi</div>
           </div>
 
           <div className="flex gap-2 p-3 border-b border-slate-200 overflow-x-auto">
@@ -454,6 +436,6 @@ export const SmartStop = () => {
           Xem giỏ ({itemCount}) · {formatVND(total)}
         </button>
       )}
-    </main>
+    </PageShell>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { trips } from "@/data/trips";
 import { useJourney } from "@/contexts/JourneyContext";
+import { PageShell } from "@/components/PageShell";
 
 const quickTags = [
   { id: 1, label: "Lái xe an toàn" },
@@ -86,8 +87,9 @@ export const PostTripFeedback = () => {
   // Success Screen
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-sm w-full text-center">
+      <PageShell title="Đánh giá chuyến đi" backTo="/" width="wide">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8 text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-50 flex items-center justify-center">
             <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
@@ -99,32 +101,15 @@ export const PostTripFeedback = () => {
           <p className="text-sm text-slate-500 leading-relaxed">
             Đánh giá của bạn đã được ghi nhận. Chúng tôi sẽ tiếp tục cải thiện dịch vụ để mang lại trải nghiệm tốt nhất.
           </p>
+          </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      {/* Clean, Modern Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center text-slate-500 hover:text-slate-800 transition-colors p-2 -ml-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-          <span className="text-[15px] font-bold text-slate-900">
-            Đánh giá chuyến đi
-          </span>
-          <div className="w-9" /> {/* Spacer for centering */}
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
+    <PageShell title="Đánh giá chuyến đi" backTo="/" width="wide">
+      <div className="max-w-2xl mx-auto space-y-6">
         
         {/* Trip Summary Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
@@ -354,7 +339,7 @@ export const PostTripFeedback = () => {
           </button>
         </div>
 
-      </main>
-    </div>
+      </div>
+    </PageShell>
   );
 };

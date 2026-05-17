@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { quickReportIssues } from "@/data/quickReportIssues";
+import { PageShell } from "@/components/PageShell";
 
 // Quick Report — in-trip "panic button" for the user to flag issues to dispatch.
 // Two priority lanes:
@@ -48,9 +49,9 @@ export const QuickReport = () => {
   // Success state replaces the form entirely once submitted.
   if (sent) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <div className="max-w-md mx-auto px-4 pt-6">
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-sm">
+      <PageShell title="Quick Report" backTo="/trip-progress" width="wide">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-8 text-center shadow-sm">
             <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 grid place-items-center">
               <svg className="w-9 h-9 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6L9 17l-5-5" />
@@ -75,28 +76,23 @@ export const QuickReport = () => {
             </button>
           </div>
         </div>
-      </main>
+      </PageShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-12">
-      <div className="max-w-md mx-auto px-4 pt-4">
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-          {/* Orange header — visually distinct from normal flows because this is urgent. */}
-          <div className="p-4 bg-gradient-to-r from-orange-500 to-orange-400 text-white flex items-center gap-2">
-            <span className="text-2xl">⚠️</span>
-            <div className="flex-1">
-              <div className="font-semibold">Quick Report</div>
-              <div className="text-xs opacity-90">Báo vấn đề — Phụ xe sẽ phản hồi trong 2 phút</div>
+    <PageShell title="Quick Report" backTo="/trip-progress" width="wide">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+          {/* Soft orange banner kept inside the card — the chrome stays neutral via PageShell,
+              but the page itself still signals "this is a help/escalation flow" with the
+              FUTA orange brand. */}
+          <div className="p-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/30 grid place-items-center text-xl shrink-0">⚠️</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold">Báo vấn đề ngay</div>
+              <div className="text-xs text-white/90">Phụ xe sẽ phản hồi trong ~2 phút</div>
             </div>
-            <button
-              onClick={() => navigate("/trip-progress")}
-              className="w-7 h-7 rounded-full bg-white/20 grid place-items-center hover:bg-white/30"
-              aria-label="Đóng"
-            >
-              ✕
-            </button>
           </div>
 
           <div className="p-4">
@@ -152,6 +148,6 @@ export const QuickReport = () => {
           </div>
         </div>
       </div>
-    </main>
+    </PageShell>
   );
 };
