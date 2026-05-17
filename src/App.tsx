@@ -6,6 +6,7 @@ import { FloatingWidget } from "@/components/FloatingWidget";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { SearchResultsPage } from "@/sections/SearchResultsPage";
 import { BookingPage } from "@/sections/BookingPage";
+import { PaymentPage } from "@/sections/PaymentPage";
 import { CrewScoreDetail } from "@/sections/CrewScoreDetail";
 import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
@@ -22,6 +23,7 @@ export const App = () => {
             <Route path="/" element={<MainLayout />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/booking" element={<BookingPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />
