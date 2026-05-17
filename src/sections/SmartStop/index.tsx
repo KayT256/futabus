@@ -5,8 +5,15 @@ import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { foodMenu, foodCategories, getFoodById, type FoodCategory } from "@/data/foodMenu";
 import { madaguiRestStop } from "@/data/restStop";
+import { wallets } from "@/data/wallets";
 
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
+
+// Three fastest tap-and-go options for at-the-rest-stop ordering. We pull from the central
+// wallets catalog to keep brand logos and labels consistent with the main Smart Pay screen.
+const smartStopWallets = ["futapay", "momo", "card"]
+  .map((id) => wallets.find((w) => w.id === id)!)
+  .filter(Boolean);
 
 // Smart Stop — pre-order food/drinks at the Madagui rest stop and pickup with a QR code.
 // 4 views drive the screen:
@@ -196,17 +203,20 @@ export const SmartStop = () => {
               <span className="text-slate-500">Tổng</span>
               <span className="text-orange-600 font-bold">{formatVND(total)}</span>
             </div>
+            {/* Reuse the same wallets catalog Smart Pay uses, so the brand logos and labels stay
+                consistent. We only surface the 3 most likely picks here for fast tap-and-go ordering. */}
             <div className="mt-4 grid grid-cols-3 gap-2">
-              {(["FUTAPay", "MoMo", "Thẻ"] as const).map((m, i) => (
+              {smartStopWallets.map((w, i) => (
                 <button
-                  key={m}
-                  className={`p-3 border-2 rounded-xl text-sm font-medium ${
+                  key={w.id}
+                  className={`p-3 border-2 rounded-xl text-xs font-medium flex flex-col items-center gap-1.5 ${
                     i === 0
                       ? "border-orange-500 bg-orange-50 text-orange-600"
                       : "border-slate-200 text-slate-700 hover:border-orange-300"
                   }`}
                 >
-                  {m}
+                  <img src={w.logo} alt={w.label} className="h-6 max-w-[72px] object-contain" />
+                  <span className="truncate w-full text-center">{w.label}</span>
                 </button>
               ))}
             </div>

@@ -7,56 +7,61 @@ export type WalletId = "futapay" | "momo" | "zalopay" | "shopeepay" | "vnpay" | 
 export interface Wallet {
   id: WalletId;
   label: string;
-  // Short emoji/icon shown on the payment chip — keeps things readable on mobile.
-  icon: string;
+  // Path to the brand logo (in /public). Rendered as <img>.
+  logo: string;
   // Subtitle hints whether the wallet is linked, balance, masked card number, etc.
+  // For FUTAPay the live balance is sourced from WalletContext, not this string.
   sub: string;
   linked: boolean;
-  // Only FUTAPay exposes a real balance in this demo (FUTA's own closed-loop wallet).
+  // Initial demo balance for FUTAPay — WalletContext seeds from this on first load.
   balance?: number;
 }
+
+// Initial seed balance for FUTAPay in this demo. Lives here so the WalletContext
+// and the wallet data stay in sync if we change the starting amount later.
+export const FUTAPAY_INITIAL_BALANCE = 1_250_000;
 
 export const wallets: Wallet[] = [
   {
     id: "futapay",
     label: "FUTAPay",
-    icon: "🟢",
-    sub: "Ví FUTA · Số dư 1.250.000đ",
+    logo: "/futapay-logo.png",
+    sub: "Ví FUTA · Thanh toán không tiền mặt",
     linked: true,
-    balance: 1250000,
+    balance: FUTAPAY_INITIAL_BALANCE,
   },
   {
     id: "momo",
     label: "MoMo",
-    icon: "💗",
+    logo: "/momo-logo.png",
     sub: "Đã liên kết · ****8821",
     linked: true,
   },
   {
     id: "zalopay",
     label: "ZaloPay",
-    icon: "💙",
+    logo: "/zalopay-logo.jpeg",
     sub: "Đã liên kết · ****4407",
     linked: true,
   },
   {
     id: "shopeepay",
     label: "ShopeePay",
-    icon: "🧡",
+    logo: "/shopee-pay-logo.png",
     sub: "Chưa liên kết — nhấn để liên kết",
     linked: false,
   },
   {
     id: "vnpay",
     label: "VNPay QR",
-    icon: "🟦",
+    logo: "/vnpay-logo.png",
     sub: "Quét QR từ app ngân hàng",
     linked: true,
   },
   {
     id: "card",
     label: "Thẻ Visa/Master",
-    icon: "💳",
+    logo: "/visa-mastercard-logo.webp",
     sub: "Cần nhập thông tin thẻ",
     linked: true,
   },

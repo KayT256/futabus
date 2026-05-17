@@ -6,7 +6,8 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  publicDir: "./static",
+  // Default Vite publicDir; brand logos and other static assets live in /public.
+  publicDir: "./public",
   base: "./",
   css: {
     postcss: {

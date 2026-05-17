@@ -180,7 +180,13 @@ export const PaymentPage = () => {
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="text-2xl">{w.icon}</div>
+                        <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 grid place-items-center overflow-hidden shrink-0">
+                          <img
+                            src={w.logo}
+                            alt={w.label}
+                            className="max-w-[80%] max-h-[80%] object-contain"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold truncate">{w.label}</div>
                           <div className="text-[10px] text-gray-500 truncate">{w.sub}</div>
