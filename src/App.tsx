@@ -7,6 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { SearchResultsPage } from "@/sections/SearchResultsPage";
 import { BookingPage } from "@/sections/BookingPage";
 import { PaymentPage } from "@/sections/PaymentPage";
+import { TicketDetail } from "@/sections/TicketDetail";
 import { CrewScoreDetail } from "@/sections/CrewScoreDetail";
 import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
@@ -24,6 +25,7 @@ export const App = () => {
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/booking" element={<BookingPage />} />
             <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/ticket" element={<TicketDetail />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />
