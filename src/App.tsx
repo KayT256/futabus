@@ -11,6 +11,7 @@ import { TicketDetail } from "@/sections/TicketDetail";
 import { FutaRada } from "@/sections/FutaRada";
 import { TerminalMap } from "@/sections/TerminalMap";
 import { QuickReport } from "@/sections/QuickReport";
+import { SmartStop } from "@/sections/SmartStop";
 import { CrewScoreDetail } from "@/sections/CrewScoreDetail";
 import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
@@ -32,6 +33,7 @@ export const App = () => {
             <Route path="/futa-rada" element={<FutaRada />} />
             <Route path="/terminal-map" element={<TerminalMap />} />
             <Route path="/quick-report" element={<QuickReport />} />
+            <Route path="/smart-stop" element={<SmartStop />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />
