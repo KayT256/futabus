@@ -183,20 +183,21 @@ export const PaymentPage = () => {
         </div>
       </div>
 
-      <div className="max-w-[1100px] mx-auto px-4 pt-4 sm:pt-6">
+      <div className="max-w-[1200px] mx-auto px-4 pt-4 sm:pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
           {/* ── LEFT: wallets + manual code + summary ─────────── */}
           <div className="space-y-4">
-            {/* Smart Pay banner — sets the tone for what makes this screen different. */}
-            <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white p-5 shadow-sm">
+            {/* Smart Pay banner — FUTA orange brand voice. Uses the same outline halo
+                as the BookingHero search card so the page feels native. */}
+            <div className="relative rounded-2xl bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 text-white p-5 shadow-sm outline outline-8 outline-orange-800/10">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] tracking-[0.3em] opacity-70">FUTA SMART PAY</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] tracking-[0.3em] font-semibold text-white/90">FUTA SMART PAY</div>
                   <div className="font-bold text-lg mt-1">Thanh toán thông minh, không bỏ sót deal</div>
                 </div>
-                <span className="text-2xl">✨</span>
+                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur ring-1 ring-white/30 grid place-items-center text-2xl shrink-0">✨</div>
               </div>
-              <div className="mt-2 text-xs opacity-80">
+              <div className="mt-2 text-xs text-white/90">
                 Tự đề xuất voucher tốt nhất theo ví bạn chọn — không cần kiểm tra từng app.
               </div>
             </div>
@@ -285,7 +286,7 @@ export const PaymentPage = () => {
                 />
                 <button
                   type="submit"
-                  className="px-5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+                  className="px-5 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition"
                 >
                   Áp dụng
                 </button>
