@@ -1,3 +1,22 @@
+export interface CrewMember {
+  id: string;
+  name: string;
+  photo: string;
+  role: "Tài xế" | "Phụ xe";
+  yearsOfExperience: number;
+  rating: number;
+  totalRatings: number;
+  badges: string[];
+  recentReviews: {
+    id: number;
+    customer: string;
+    rating: number;
+    date: string;
+    comment: string;
+    tags: string[];
+  }[];
+}
+
 export interface Trip {
   id: string;
   route: string;
@@ -25,15 +44,24 @@ export interface Trip {
       tags: string[];
     }[];
   };
+  // The phụ xe (bus assistant) — shares cabin with the driver, helps passengers with luggage,
+  // shuttle coordination, and rest-stop pickup. Surfaced on Crew Score and on the Journey screen.
+  crew: CrewMember;
   pickupLocation: string;
   pickupStation: string;
+  // Full terminal name used by Smart Stop and the Terminal Map.
+  pickupTerminal: string;
   dropoffLocation: string;
   dropoffStation: string;
+  // Full terminal name used at arrival (Bến xe Liên tỉnh Đà Lạt, etc.).
+  dropoffTerminal: string;
   pickupTime: string;
   busType: string;
   duration: string;
   distance: string;
   timezone: string;
+  // License plate is shown on the Journey screen and on the Terminal Map marker.
+  licensePlate: string;
 }
 
 export const trips: Trip[] = [
@@ -100,13 +128,52 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "Miền Tây",
+    pickupTerminal: "Bến xe Miền Tây",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "23:00",
     busType: "Limousine",
     duration: "08:35 h",
     distance: "320Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-128.45",
+    crew: {
+      id: "PX001",
+      name: "Trần Thị Mai",
+      photo: "https://i.pravatar.cc/150?img=45",
+      role: "Phụ xe",
+      yearsOfExperience: 4,
+      rating: 4.85,
+      totalRatings: 1456,
+      badges: ["Phục vụ tận tâm", "Nhiệt tình", "Thân thiện"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Lan Anh",
+          rating: 5,
+          date: "13/05/2026",
+          comment: "Chị Mai rất chu đáo, phát nước và khăn lạnh đầy đủ.",
+          tags: ["Nhiệt tình", "Chu đáo"],
+        },
+        {
+          id: 2,
+          customer: "Đức Anh",
+          rating: 5,
+          date: "11/05/2026",
+          comment: "Hỗ trợ hành lý nhiệt tình, hướng dẫn ghế rõ ràng.",
+          tags: ["Nhiệt tình", "Hỗ trợ tốt"],
+        },
+        {
+          id: 3,
+          customer: "Minh Tú",
+          rating: 4,
+          date: "09/05/2026",
+          comment: "Phục vụ tốt, có thể nói chậm hơn một chút khi thông báo.",
+          tags: ["Phục vụ tốt"],
+        },
+      ],
+    },
   },
   {
     id: "TRIP002",
@@ -171,13 +238,44 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "An Sương",
+    pickupTerminal: "Bến xe An Sương",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "23:00",
     busType: "Limousine",
     duration: "08:40 h",
     distance: "304Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-219.34",
+    crew: {
+      id: "PX002",
+      name: "Phạm Thu Trang",
+      photo: "https://i.pravatar.cc/150?img=49",
+      role: "Phụ xe",
+      yearsOfExperience: 2,
+      rating: 4.7,
+      totalRatings: 892,
+      badges: ["Thân thiện", "Năng động"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Quang Huy",
+          rating: 5,
+          date: "09/05/2026",
+          comment: "Rất dễ thương và chuyên nghiệp.",
+          tags: ["Thân thiện", "Chuyên nghiệp"],
+        },
+        {
+          id: 2,
+          customer: "Bích Thảo",
+          rating: 4,
+          date: "06/05/2026",
+          comment: "Hỗ trợ tốt khi có em bé đi cùng.",
+          tags: ["Hỗ trợ tốt"],
+        },
+      ],
+    },
   },
   {
     id: "TRIP003",
@@ -242,13 +340,44 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "An Sương",
+    pickupTerminal: "Bến xe An Sương",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "23:30",
     busType: "Limousine",
     duration: "08:35 h",
     distance: "304Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-330.78",
+    crew: {
+      id: "PX003",
+      name: "Nguyễn Hồng Hạnh",
+      photo: "https://i.pravatar.cc/150?img=20",
+      role: "Phụ xe",
+      yearsOfExperience: 5,
+      rating: 4.9,
+      totalRatings: 1820,
+      badges: ["Phục vụ tận tâm", "Cẩn thận"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Hải Đăng",
+          rating: 5,
+          date: "06/05/2026",
+          comment: "Chị Hạnh chu đáo, kiểm tra ghế và an toàn rất kỹ.",
+          tags: ["Chu đáo", "Cẩn thận"],
+        },
+        {
+          id: 2,
+          customer: "Mai Anh",
+          rating: 5,
+          date: "04/05/2026",
+          comment: "Cảm ơn chị đã giúp đỡ khi mình bị say xe.",
+          tags: ["Nhiệt tình", "Tận tâm"],
+        },
+      ],
+    },
   },
   {
     id: "TRIP004",
@@ -313,13 +442,44 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "An Sương",
+    pickupTerminal: "Bến xe An Sương",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "23:45",
     busType: "Limousine",
     duration: "08:27 h",
     distance: "304Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-447.12",
+    crew: {
+      id: "PX004",
+      name: "Đỗ Thị Linh",
+      photo: "https://i.pravatar.cc/150?img=23",
+      role: "Phụ xe",
+      yearsOfExperience: 3,
+      rating: 4.8,
+      totalRatings: 1100,
+      badges: ["Nhiệt tình", "Thân thiện"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Tuấn Kiệt",
+          rating: 5,
+          date: "04/05/2026",
+          comment: "Bạn ấy rất nhiệt tình, hỗ trợ check-in nhanh.",
+          tags: ["Nhiệt tình"],
+        },
+        {
+          id: 2,
+          customer: "Thanh Hằng",
+          rating: 4,
+          date: "02/05/2026",
+          comment: "Phục vụ ổn, có thể chủ động hỏi thăm khách hơn.",
+          tags: ["Phục vụ tốt"],
+        },
+      ],
+    },
   },
   {
     id: "TRIP005",
@@ -384,13 +544,36 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "An Sương",
+    pickupTerminal: "Bến xe An Sương",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "00:00",
     busType: "Limousine",
     duration: "08:20 h",
     distance: "304Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-561.89",
+    crew: {
+      id: "PX005",
+      name: "Lê Thị Nga",
+      photo: "https://i.pravatar.cc/150?img=26",
+      role: "Phụ xe",
+      yearsOfExperience: 1,
+      rating: 4.6,
+      totalRatings: 410,
+      badges: ["Thân thiện"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Quốc Bảo",
+          rating: 5,
+          date: "03/05/2026",
+          comment: "Bạn nhỏ tuổi nhưng rất chăm chỉ và lịch sự.",
+          tags: ["Thân thiện", "Lịch sự"],
+        },
+      ],
+    },
   },
   {
     id: "TRIP006",
@@ -455,12 +638,43 @@ export const trips: Trip[] = [
     },
     pickupLocation: "TP. Hồ Chí Minh",
     pickupStation: "An Sương",
+    pickupTerminal: "Bến xe An Sương",
     dropoffLocation: "Đà Lạt",
     dropoffStation: "Liên tỉnh Đà Lạt",
+    dropoffTerminal: "Bến xe Liên tỉnh Đà Lạt",
     pickupTime: "00:15",
     busType: "Limousine",
     duration: "08:15 h",
     distance: "304Km",
     timezone: "Asian/Ho Chi Minh",
+    licensePlate: "51B-678.23",
+    crew: {
+      id: "PX006",
+      name: "Vũ Thị Yến",
+      photo: "https://i.pravatar.cc/150?img=11",
+      role: "Phụ xe",
+      yearsOfExperience: 6,
+      rating: 4.92,
+      totalRatings: 2310,
+      badges: ["Phục vụ tận tâm", "Lâu năm"],
+      recentReviews: [
+        {
+          id: 1,
+          customer: "Phương Linh",
+          rating: 5,
+          date: "02/05/2026",
+          comment: "Chị Yến lâu năm, xử lý mọi tình huống rất gọn gàng.",
+          tags: ["Lâu năm", "Chuyên nghiệp"],
+        },
+        {
+          id: 2,
+          customer: "Hữu Thắng",
+          rating: 5,
+          date: "30/04/2026",
+          comment: "Chia sẻ thông tin chuyến rất rõ ràng, an tâm.",
+          tags: ["Chu đáo", "Chuyên nghiệp"],
+        },
+      ],
+    },
   },
 ];

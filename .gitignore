@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# My local working notes (not for repo)
+CONTEXT.md
+MOCK.md
