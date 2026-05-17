@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
+import { useWallet } from "@/contexts/WalletContext";
+import { TopUpSheet } from "@/components/TopUpSheet";
 import { foodMenu, foodCategories, getFoodById, type FoodCategory } from "@/data/foodMenu";
 import { madaguiRestStop } from "@/data/restStop";
-import { wallets } from "@/data/wallets";
+import { wallets, type WalletId } from "@/data/wallets";
 
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
@@ -30,6 +32,7 @@ type View = "menu" | "cart" | "pay" | "qr";
 export const SmartStop = () => {
   const navigate = useNavigate();
   const { activeJourney, setCart, setPickedUp } = useJourney();
+  const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
 
   useEffect(() => {
     if (!activeJourney) {
@@ -46,6 +49,10 @@ export const SmartStop = () => {
 
   const [view, setView] = useState<View>(initialView);
   const [category, setCategory] = useState<FoodCategory>("Món chính");
+  // Smart Stop defaults to FUTAPay since carts are usually small and the rest stop
+  // is mid-trip — fast tap with the wallet that's already linked.
+  const [payMethod, setPayMethod] = useState<WalletId>("futapay");
+  const [topUpShortfall, setTopUpShortfall] = useState<number | null>(null);
 
   // All hooks must run on every render — derive safely from activeJourney with fallbacks
   // so we never break Rules of Hooks when activeJourney is briefly null on first render.
@@ -206,22 +213,49 @@ export const SmartStop = () => {
             {/* Reuse the same wallets catalog Smart Pay uses, so the brand logos and labels stay
                 consistent. We only surface the 3 most likely picks here for fast tap-and-go ordering. */}
             <div className="mt-4 grid grid-cols-3 gap-2">
-              {smartStopWallets.map((w, i) => (
-                <button
-                  key={w.id}
-                  className={`p-3 border-2 rounded-xl text-xs font-medium flex flex-col items-center gap-1.5 ${
-                    i === 0
-                      ? "border-orange-500 bg-orange-50 text-orange-600"
-                      : "border-slate-200 text-slate-700 hover:border-orange-300"
-                  }`}
-                >
-                  <img src={w.logo} alt={w.label} className="h-6 max-w-[72px] object-contain" />
-                  <span className="truncate w-full text-center">{w.label}</span>
-                </button>
-              ))}
+              {smartStopWallets.map((w) => {
+                const active = payMethod === w.id;
+                return (
+                  <button
+                    key={w.id}
+                    onClick={() => setPayMethod(w.id)}
+                    className={`p-3 border-2 rounded-xl text-xs font-medium flex flex-col items-center gap-1.5 transition ${
+                      active
+                        ? "border-orange-500 bg-orange-50 text-orange-600"
+                        : "border-slate-200 text-slate-700 hover:border-orange-300"
+                    }`}
+                  >
+                    <img src={w.logo} alt={w.label} className="h-6 max-w-[72px] object-contain" />
+                    <span className="truncate w-full text-center">{w.label}</span>
+                    {w.id === "futapay" && (
+                      <span className="text-[10px] text-slate-500 truncate w-full text-center">
+                        {formatVND(futapayBalance)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             <button
               onClick={() => {
+                // FUTAPay path — deduct from the wallet. Mirror PaymentPage's flow:
+                // insufficient → open TopUpSheet pre-filled with the shortfall, auto-retry
+                // on success.
+                if (payMethod === "futapay") {
+                  if (futapayBalance < total) {
+                    setTopUpShortfall(total - futapayBalance);
+                    return;
+                  }
+                  const ok = walletPay({
+                    amount: total,
+                    description: `Smart Stop · ${madaguiRestStop.name}`,
+                    tripId: booking.trip.id,
+                  });
+                  if (!ok) {
+                    setTopUpShortfall(total);
+                    return;
+                  }
+                }
                 setView("qr");
                 toast.success("Đặt món thành công — Xem QR pickup");
               }}
@@ -231,6 +265,31 @@ export const SmartStop = () => {
             </button>
           </div>
         </div>
+
+        {/* Top-up sheet for FUTAPay shortfall — auto-retry the order on success. */}
+        {topUpShortfall !== null && (
+          <TopUpSheet
+            onClose={() => setTopUpShortfall(null)}
+            reason={`Cần thêm ${formatVND(topUpShortfall)} để thanh toán đơn Smart Stop bằng FUTAPay.`}
+            suggestedAmount={topUpShortfall}
+            onConfirm={(amount, sourceId) => {
+              topUp({ amount, sourceId });
+              setTopUpShortfall(null);
+              toast.success(`Đã nạp ${formatVND(amount)} — tiếp tục đặt món...`);
+              setTimeout(() => {
+                const ok = walletPay({
+                  amount: total,
+                  description: `Smart Stop · ${madaguiRestStop.name}`,
+                  tripId: booking.trip.id,
+                });
+                if (ok) {
+                  setView("qr");
+                  toast.success("Đặt món thành công — Xem QR pickup");
+                }
+              }, 200);
+            }}
+          />
+        )}
       </main>
     );
   }

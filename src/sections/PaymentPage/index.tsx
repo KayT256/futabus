@@ -5,6 +5,8 @@ import { trips } from "@/data/trips";
 import { wallets, getWalletLabel, type WalletId } from "@/data/wallets";
 import { vouchers, findBestVoucher, findVoucherByCode, type Voucher } from "@/data/vouchers";
 import { useJourney, type PickupInfo } from "@/contexts/JourneyContext";
+import { useWallet } from "@/contexts/WalletContext";
+import { TopUpSheet } from "@/components/TopUpSheet";
 
 // Format helper used across this screen.
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
@@ -30,6 +32,7 @@ export const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { startJourney } = useJourney();
+  const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
 
   const state = (location.state ?? {}) as BookingState;
   const trip = trips.find((t) => t.id === state.tripId) ?? trips[0];
@@ -47,6 +50,9 @@ export const PaymentPage = () => {
   const [manualCode, setManualCode] = useState("");
   const [showStore, setShowStore] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+  // Insufficient-balance → we open the shared TopUpSheet pre-filled with the shortfall.
+  // After a successful top-up, we auto-retry the payment so the user doesn't have to re-tap.
+  const [topUpShortfall, setTopUpShortfall] = useState<number | null>(null);
 
   // Subtotal scales with selected seats. The headline Smart Pay feature is auto-recommend.
   const subtotal = trip.price * seats.length;
@@ -98,22 +104,55 @@ export const PaymentPage = () => {
   const saving = voucher?.saving ?? 0;
   const total = Math.max(0, subtotal - saving);
 
-  // Pretend to talk to a payment gateway — sets isPaying briefly so the button isn't
-  // double-clicked, then writes the booking into JourneyContext and navigates to /ticket.
+  // Shared finalize step — used by both the FUTAPay path (after balance is deducted)
+  // and the non-FUTAPay path (gateway is mocked).
+  const finalizePayment = () => {
+    startJourney({
+      trip,
+      seats,
+      pickup,
+      paymentMethod: method,
+      voucher,
+      bookedAt: new Date().toISOString(),
+      totalPaid: total,
+    });
+    toast.success("Thanh toán thành công!", { description: `Mã vé: FUTA${trip.id}` });
+    navigate("/ticket", { replace: true, state: { from: "payment" } });
+  };
+
+  // FUTAPay path — actually deduct from the wallet balance via WalletContext.pay().
+  // If insufficient, surface the TopUpSheet pre-filled with the shortfall so the user
+  // can fix it in one flow without leaving the page.
+  const payWithFutapay = (): boolean => {
+    if (futapayBalance < total) {
+      setTopUpShortfall(total - futapayBalance);
+      return false;
+    }
+    const ok = walletPay({
+      amount: total,
+      description: `Vé xe ${trip.route}`,
+      tripId: trip.id,
+      voucherSaved: voucher?.saving,
+    });
+    if (!ok) {
+      // Defensive: should never hit because we already balance-checked above.
+      setTopUpShortfall(total);
+      return false;
+    }
+    return true;
+  };
+
   const handlePay = () => {
     setIsPaying(true);
+    // Mock a small gateway delay so the button feels responsive.
     setTimeout(() => {
-      startJourney({
-        trip,
-        seats,
-        pickup,
-        paymentMethod: method,
-        voucher,
-        bookedAt: new Date().toISOString(),
-        totalPaid: total,
-      });
-      toast.success("Thanh toán thành công!", { description: `Mã vé: FUTA${trip.id}` });
-      navigate("/ticket", { replace: true, state: { from: "payment" } });
+      if (method === "futapay") {
+        if (!payWithFutapay()) {
+          setIsPaying(false);
+          return;
+        }
+      }
+      finalizePayment();
     }, 600);
   };
 
@@ -171,6 +210,12 @@ export const PaymentPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {wallets.map((w) => {
                   const active = method === w.id;
+                  // For FUTAPay we surface the live balance from WalletContext instead of
+                  // the static catalog string. Other wallets keep their static subtitles.
+                  const sub =
+                    w.id === "futapay"
+                      ? `Ví FUTA · Số dư ${formatVND(futapayBalance)}`
+                      : w.sub;
                   return (
                     <button
                       key={w.id}
@@ -189,7 +234,7 @@ export const PaymentPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold truncate">{w.label}</div>
-                          <div className="text-[10px] text-gray-500 truncate">{w.sub}</div>
+                          <div className="text-[10px] text-gray-500 truncate">{sub}</div>
                         </div>
                       </div>
                       {!w.linked && (
@@ -348,6 +393,29 @@ export const PaymentPage = () => {
           </aside>
         </div>
       </div>
+
+      {/* Top-up sheet — opened only when FUTAPay is short on funds. After a successful
+          top-up we automatically retry the payment so the user lands on /ticket. */}
+      {topUpShortfall !== null && (
+        <TopUpSheet
+          onClose={() => {
+            setTopUpShortfall(null);
+            setIsPaying(false);
+          }}
+          reason={`Cần thêm ${formatVND(topUpShortfall)} để thanh toán vé bằng FUTAPay.`}
+          suggestedAmount={topUpShortfall}
+          onConfirm={(amount, sourceId) => {
+            topUp({ amount, sourceId });
+            setTopUpShortfall(null);
+            toast.success(`Đã nạp ${formatVND(amount)} — tiếp tục thanh toán...`);
+            // Retry the payment after the balance update propagates.
+            setTimeout(() => {
+              if (payWithFutapay()) finalizePayment();
+              else setIsPaying(false);
+            }, 200);
+          }}
+        />
+      )}
 
       {/* Voucher store modal — sorts compatible-with-current-wallet first, then by saving descending. */}
       {showStore && (
