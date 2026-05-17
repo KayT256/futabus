@@ -207,6 +207,31 @@ export const PaymentPage = () => {
               <p className="text-xs text-gray-500 mb-4">
                 Đổi ví → hệ thống tự cập nhật voucher khả dụng ở bên phải.
               </p>
+              {/* When FUTAPay is selected, show a small "manage wallet" link so the
+                  user can top up or review history without losing the booking context. */}
+              {method === "futapay" && (
+                <div className="mb-3 flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <img src="/futapay-logo.png" alt="" className="w-5 h-5 object-contain" />
+                    <div>
+                      <div className="font-semibold text-emerald-800">
+                        Số dư FUTAPay: {formatVND(futapayBalance)}
+                      </div>
+                      <div className="text-[10px] text-emerald-700">
+                        {futapayBalance >= total
+                          ? "Đủ thanh toán đơn này"
+                          : `Cần thêm ${formatVND(total - futapayBalance)}`}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/futapay")}
+                    className="text-xs font-semibold text-emerald-700 hover:underline whitespace-nowrap"
+                  >
+                    Quản lý ví →
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {wallets.map((w) => {
                   const active = method === w.id;

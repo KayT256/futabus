@@ -1,9 +1,13 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useWallet } from "@/contexts/WalletContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 
+const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
+
 export const MobileHeader = () => {
   const { isLoggedIn, userName, login } = useAuth();
+  const { balance } = useWallet();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -19,6 +23,11 @@ export const MobileHeader = () => {
   const handleNavigateToProgress = () => {
     setIsDropdownOpen(false);
     navigate('/trip-progress');
+  };
+
+  const handleNavigateToFutapay = () => {
+    setIsDropdownOpen(false);
+    navigate('/futapay');
   };
 
   // Close dropdown when clicking outside
@@ -74,7 +83,18 @@ export const MobileHeader = () => {
               
               {/* Dropdown Menu */}
               {isLoggedIn && isDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                  {/* FUTAPay row — brand-first, with live balance pulled from WalletContext. */}
+                  <button
+                    onClick={handleNavigateToFutapay}
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-3 border-b border-slate-100 mb-1 pb-3"
+                  >
+                    <img src="/futapay-logo.png" alt="FUTAPay" className="w-7 h-7 object-contain" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-900 text-[13px]">Ví FUTAPay</div>
+                      <div className="text-[11px] text-emerald-600 font-medium tabular-nums">{formatVND(balance)}</div>
+                    </div>
+                  </button>
                   <button
                     onClick={handleNavigateToProgress}
                     className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3"
