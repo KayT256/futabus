@@ -18,10 +18,12 @@ import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
 import { TripProgress } from "@/sections/TripProgress";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { JourneyProvider } from "@/contexts/JourneyContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 
 export const App = () => {
   return (
     <AuthProvider>
+      <WalletProvider>
       <JourneyProvider>
         <body className="text-neutral-900 text-sm not-italic tabular-nums font-normal accent-auto bg-white box-border caret-transparent block h-full tracking-[normal] leading-5 list-outside list-disc outline-[3px] pointer-events-auto text-start indent-[0px] normal-case visible w-full overflow-auto border-separate font-intertight md:text-base md:leading-6">
           <Routes>
@@ -46,6 +48,7 @@ export const App = () => {
           <Toaster position="top-center" richColors closeButton />
         </body>
       </JourneyProvider>
+      </WalletProvider>
     </AuthProvider>
   );
 };
