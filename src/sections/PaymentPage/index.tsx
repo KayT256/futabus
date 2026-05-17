@@ -434,8 +434,17 @@ export const PaymentPage = () => {
             setTopUpShortfall(null);
             toast.success(`Đã nạp ${formatVND(amount)} — tiếp tục thanh toán...`);
             // Retry the payment after the balance update propagates.
+            // Call walletPay directly instead of payWithFutapay() — the wrapper's
+            // pre-check reads futapayBalance from a stale closure, but walletPay
+            // uses setBalance(prev => ...) so it's atomic against the latest state.
             setTimeout(() => {
-              if (payWithFutapay()) finalizePayment();
+              const ok = walletPay({
+                amount: total,
+                description: `Vé xe ${trip.route}`,
+                tripId: trip.id,
+                voucherSaved: voucher?.saving,
+              });
+              if (ok) finalizePayment();
               else setIsPaying(false);
             }, 200);
           }}
