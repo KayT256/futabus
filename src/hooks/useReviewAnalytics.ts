@@ -70,14 +70,19 @@ function bucketTopics(
   sentiment: Sentiment,
   topicDefs: typeof TOPIC_POSITIVE,
 ) {
-  const pos = reviews.filter((r) => r.sentiment === sentiment);
+  const pool = reviews.filter((r) => r.sentiment === sentiment);
   return topicDefs.map((td) => {
-    const count = pos.filter((r) =>
+    const matching = pool.filter((r) =>
       r.tags.some((tag) =>
         td.keywords.some((kw) => tag.toLowerCase().includes(kw.toLowerCase()))
       )
-    ).length;
-    return { ...td, count };
+    );
+    // Pick most-helpful representative reviews to show as topic samples
+    // (mirrors the notebook's `show_topic_samples` block).
+    const samples = [...matching]
+      .sort((a, b) => b.helpfulCount - a.helpfulCount)
+      .slice(0, 3);
+    return { ...td, count: matching.length, samples };
   });
 }
 
@@ -127,9 +132,11 @@ export interface ReviewAnalytics {
   avgRating: number;
   topPosKeywords: { word: string; count: number }[];
   topNegKeywords: { word: string; count: number }[];
+  allPosKeywords: { word: string; count: number }[];   // top 60 — feeds the word cloud
+  allNegKeywords: { word: string; count: number }[];
   tagFrequency:   { tag: string; count: number }[];  // all tags
-  posTopics:      { id: string; label: string; keywords: string[]; count: number }[];
-  negTopics:      { id: string; label: string; keywords: string[]; count: number }[];
+  posTopics:      { id: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
+  negTopics:      { id: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
   monthlyBreakdown: { month: string; label: string; positive: number; neutral: number; negative: number }[];
 }
 
@@ -165,6 +172,9 @@ export function useReviewAnalytics(reviews: Review[]): ReviewAnalytics {
 
     const topPosKeywords = topN(posFreq, 10);
     const topNegKeywords = topN(negFreq, 10);
+    // Word cloud needs more than 10 — give it the top 60.
+    const allPosKeywords = topN(posFreq, 60);
+    const allNegKeywords = topN(negFreq, 60);
 
     // Tag frequency across all reviews.
     const tagMap = new Map<string, number>();
@@ -187,7 +197,9 @@ export function useReviewAnalytics(reviews: Review[]): ReviewAnalytics {
       healthScore: parseFloat(healthScore.toFixed(1)),
       healthLabel, healthColor,
       avgRating,
-      topPosKeywords, topNegKeywords, tagFrequency,
+      topPosKeywords, topNegKeywords,
+      allPosKeywords, allNegKeywords,
+      tagFrequency,
       posTopics, negTopics, monthlyBreakdown,
     };
   }, [reviews]);

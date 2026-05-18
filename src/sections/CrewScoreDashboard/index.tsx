@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trips } from "@/data/trips";
 import { ALL_REVIEWS } from "@/data/reviews";
 import { useReviewAnalytics } from "@/hooks/useReviewAnalytics";
+import { WordCloud } from "@/components/WordCloud";
 
 const mockStaffData = trips.map(trip => trip.driver);
 
@@ -250,6 +251,52 @@ export const CrewScoreDashboard = () => {
           </div>
         </div>
 
+        {/* ── NLP Pipeline (mirrors the 5 notebook stages) ───────────────── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Pipeline Phân tích NLP</h2>
+              <p className="text-sm text-slate-500">5 giai đoạn theo notebook Phân_tích_cảm_xúc_tiếng_Việt.ipynb</p>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-3 py-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Đã chạy xong • {nlp.total.toLocaleString()} reviews
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {[
+              { num: 1, icon: "🧹", title: "Text Cleaning",     desc: "Loại URL, mention, hashtag, ký tự đặc biệt", model: "regex + lang_detect", count: `${nlp.total} → ${nlp.total} VI` },
+              { num: 2, icon: "🔤", title: "Teen Code",         desc: "Chuẩn hoá tiếng lóng & viết tắt",           model: "teencode dictionary", count: "831 từ slang" },
+              { num: 3, icon: "✏️", title: "Spell Correction",  desc: "Sửa lỗi chính tả & dấu câu",                 model: "protonx-legal-tc",    count: "Seq2Seq • beam=10" },
+              { num: 4, icon: "🧠", title: "Sentiment Analysis",desc: "Phân loại POS / NEU / NEG",                   model: "5CD-AI/ViSoBERT",     count: `${nlp.positive}/${nlp.neutral}/${nlp.negative}` },
+              { num: 5, icon: "🧬", title: "Topic Modeling",    desc: "Phân cụm chủ đề tự động",                     model: "BERTopic + Qwen3 + HDBSCAN", count: `${nlp.posTopics.length + nlp.negTopics.length} topics` },
+            ].map((step, i, arr) => (
+              <div key={step.num} className="relative">
+                <div className="border border-slate-200 rounded-xl p-4 bg-gradient-to-br from-slate-50 to-white h-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">{step.num}</span>
+                    <span className="text-2xl leading-none">{step.icon}</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-1">{step.title}</h3>
+                  <p className="text-xs text-slate-500 mb-2 leading-snug">{step.desc}</p>
+                  <p className="text-[10px] font-mono text-slate-400 truncate" title={step.model}>{step.model}</p>
+                  <div className="mt-2 inline-block text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 rounded-md px-2 py-0.5">
+                    {step.count}
+                  </div>
+                </div>
+                {/* Arrow between cards (desktop only) */}
+                {i < arr.length - 1 && (
+                  <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 w-5 h-5 bg-white rounded-full items-center justify-center text-slate-300 z-10">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ── NLP Analytics Section ──────────────────────────────────────── */}
         <div className="space-y-6">
           {/* Section header + tab switcher */}
@@ -427,27 +474,64 @@ export const CrewScoreDashboard = () => {
                   })}
                 </div>
               </div>
-              {/* Tag cloud (word-cloud simulation) */}
+              {/* Side-by-side keyword table (mirrors notebook df_keywords) */}
               <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-900 mb-1">Tag Cloud — Pain Points</h3>
-                <p className="text-xs text-slate-500 mb-5">Kích thước tag tỷ lệ thuận với tần suất xuất hiện</p>
-                <div className="flex flex-wrap gap-2 items-center">
-                  {nlp.tagFrequency.map((t) => {
-                    const max = nlp.tagFrequency[0]?.count || 1;
-                    const scale = 0.6 + (t.count / max) * 1.4;
-                    const isPos = ["Lái xe an toàn","Đúng giờ","Nhiệt tình","Thân thiện","Xe sạch sẽ","Chu đáo","Chuyên nghiệp","Hỗ trợ hành lý","Điều hòa tốt"].includes(t.tag);
-                    return (
-                      <span
-                        key={t.tag}
-                        title={`${t.count} lần`}
-                        className={`px-3 py-1.5 rounded-full font-semibold border cursor-default select-none transition-transform hover:scale-105 ${isPos ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}
-                        style={{ fontSize: `${Math.round(11 * scale)}px` }}
-                      >
-                        {t.tag}
-                        <span className="ml-1 opacity-60 text-[10px]">×{t.count}</span>
-                      </span>
-                    );
-                  })}
+                <h3 className="font-bold text-slate-900 mb-1">TOP 10 Từ khóa Độc quyền — Bảng Đối chiếu</h3>
+                <p className="text-xs text-slate-500 mb-4">Tích cực vs Tiêu cực, sắp xếp theo tần suất giảm dần</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left py-2 px-2 font-semibold text-slate-500 w-8">#</th>
+                        <th className="text-left py-2 px-2 font-bold text-green-700">😊 Từ khóa Tích cực</th>
+                        <th className="text-right py-2 px-2 font-semibold text-slate-500 w-20">Tần suất</th>
+                        <th className="text-left py-2 px-2 font-bold text-red-700">😠 Từ khóa Tiêu cực</th>
+                        <th className="text-right py-2 px-2 font-semibold text-slate-500 w-20">Tần suất</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 10 }).map((_, i) => {
+                        const pos = nlp.topPosKeywords[i];
+                        const neg = nlp.topNegKeywords[i];
+                        return (
+                          <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                            <td className="py-2 px-2 text-slate-400 text-xs">{i}</td>
+                            <td className="py-2 px-2 text-slate-800">{pos?.word ?? "—"}</td>
+                            <td className="py-2 px-2 text-right font-bold text-green-700">{pos?.count ?? "—"}</td>
+                            <td className="py-2 px-2 text-slate-800">{neg?.word ?? "—"}</td>
+                            <td className="py-2 px-2 text-right font-bold text-red-700">{neg?.count ?? "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Word cloud — full notebook reproduction (YlGn + OrRd colormap, dark bg) */}
+              <div className="lg:col-span-2 bg-[#1a1a2e] rounded-2xl shadow-sm border border-slate-800 p-6">
+                <div className="flex items-baseline justify-between mb-1">
+                  <h3 className="font-extrabold text-white tracking-wide">WORD CLOUD — PHÂN TÍCH CẢM XÚC KHÁCH HÀNG</h3>
+                  <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">wordcloud + DejaVuSans-Bold</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-5">Kích thước từ tỷ lệ thuận với tần suất • bố cục Archimedean spiral</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <WordCloud
+                    words={nlp.allPosKeywords}
+                    palette="ylgn"
+                    title="😊 PAIN POINT TÍCH CỰC"
+                    titleColor="#2ecc71"
+                    width={720}
+                    height={360}
+                  />
+                  <WordCloud
+                    words={nlp.allNegKeywords}
+                    palette="orrd"
+                    title="😠 PAIN POINT TIÊU CỰC"
+                    titleColor="#e74c3c"
+                    width={720}
+                    height={360}
+                  />
                 </div>
               </div>
             </div>
@@ -462,7 +546,7 @@ export const CrewScoreDashboard = () => {
                 </h3>
                 <p className="text-xs text-slate-500 mb-5">BERTopic + Qwen3-Embedding-0.6B + HDBSCAN clustering</p>
                 <div className="space-y-4">
-                  {nlp.posTopics.map((t, i) => {
+                  {nlp.posTopics.map((t) => {
                     const maxC = Math.max(...nlp.posTopics.map((x) => x.count), 1);
                     return (
                       <div key={t.id} className="border border-green-100 rounded-xl p-4 bg-green-50/40">
@@ -475,9 +559,22 @@ export const CrewScoreDashboard = () => {
                             <span key={kw} className="text-xs bg-white border border-green-200 text-green-700 px-2 py-0.5 rounded-md">{kw}</span>
                           ))}
                         </div>
-                        <div className="h-1.5 bg-green-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-green-100 rounded-full overflow-hidden mb-3">
                           <div className="h-full bg-green-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
                         </div>
+                        {/* Topic samples — show_topic_samples() */}
+                        {t.samples.length > 0 && (
+                          <div className="border-t border-green-100 pt-2 mt-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-green-700 mb-1.5">📝 Review mẫu</p>
+                            <div className="space-y-1.5">
+                              {t.samples.map((s, idx) => (
+                                <div key={s.id} className="text-xs text-slate-600 italic leading-snug">
+                                  <span className="text-green-600 font-bold">[{idx + 1}]</span> "{s.comment.length > 110 ? s.comment.slice(0, 110) + "…" : s.comment}"
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -503,9 +600,22 @@ export const CrewScoreDashboard = () => {
                             <span key={kw} className="text-xs bg-white border border-red-200 text-red-700 px-2 py-0.5 rounded-md">{kw}</span>
                           ))}
                         </div>
-                        <div className="h-1.5 bg-red-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-red-100 rounded-full overflow-hidden mb-3">
                           <div className="h-full bg-red-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
                         </div>
+                        {/* Topic samples — show_topic_samples() */}
+                        {t.samples.length > 0 && (
+                          <div className="border-t border-red-100 pt-2 mt-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-red-700 mb-1.5">📝 Review mẫu</p>
+                            <div className="space-y-1.5">
+                              {t.samples.map((s, idx) => (
+                                <div key={s.id} className="text-xs text-slate-600 italic leading-snug">
+                                  <span className="text-red-600 font-bold">[{idx + 1}]</span> "{s.comment.length > 110 ? s.comment.slice(0, 110) + "…" : s.comment}"
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
