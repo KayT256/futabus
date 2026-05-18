@@ -34,6 +34,22 @@ export const PHASE_ORDER: JourneyPhase[] = [
   "arrived",
 ];
 
+// Wall-clock duration of each phase at 1x simulation speed (in seconds).
+// Drives both the auto-simulation auto-advance timer AND the per-phase countdown
+// displayed in the trip-progress UI when sim is active. Keeping these in one
+// place ensures the countdown and the auto-advance always agree.
+export const PHASE_DURATIONS_SEC: Record<JourneyPhase, number> = {
+  waiting_shuttle: 30,
+  shuttle_onboard: 20,
+  at_terminal: 30,
+  boarded: 15,
+  in_transit: 45,
+  near_rest: 10,
+  at_rest: 25,
+  resuming: 30,
+  arrived: Number.POSITIVE_INFINITY,
+};
+
 export const PHASE_INFO: Record<JourneyPhase, { label: string; sub: string; emoji: string }> = {
   waiting_shuttle: { label: "Đang chờ xe trung chuyển", sub: "Xe trung chuyển sẽ đến đón bạn", emoji: "🚐" },
   shuttle_onboard: { label: "Trên xe trung chuyển", sub: "Đang tới bến xe xuất phát", emoji: "🚐" },
@@ -87,6 +103,10 @@ export interface ActiveJourney {
   // Auto-simulation state
   autoSimulation?: boolean;
   simulationSpeed?: number;       // 1x, 2x, 5x, 10x speed multiplier
+  // Wall-clock timestamp (ms epoch) when the current phase started. Used by the
+  // trip-progress UI to compute a per-phase countdown that stays in sync with
+  // simulation speed. Refreshed on every advancePhase / setPhase / setSpeed.
+  phaseStartedAt?: number;
 }
 
 interface JourneyContextValue {
@@ -172,11 +192,12 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       estimatedArrivalTime,
       autoSimulation: false,
       simulationSpeed: 1,
+      phaseStartedAt: now,
     });
   }, []);
 
   const setPhase = useCallback((phase: JourneyPhase) => {
-    setActiveJourney((prev) => (prev ? { ...prev, phase } : prev));
+    setActiveJourney((prev) => (prev ? { ...prev, phase, phaseStartedAt: Date.now() } : prev));
   }, []);
 
   const advancePhase = useCallback(() => {
@@ -184,7 +205,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       if (!prev) return prev;
       const idx = PHASE_ORDER.indexOf(prev.phase);
       if (idx >= PHASE_ORDER.length - 1) return prev;
-      return { ...prev, phase: PHASE_ORDER[idx + 1] };
+      return { ...prev, phase: PHASE_ORDER[idx + 1], phaseStartedAt: Date.now() };
     });
   }, []);
 
@@ -201,7 +222,12 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const startAutoSimulation = useCallback((speed = 1) => {
-    setActiveJourney((prev) => (prev ? { ...prev, autoSimulation: true, simulationSpeed: speed } : prev));
+    // Reset phaseStartedAt so the simulation timer & per-phase countdown both
+    // start from zero for the current phase — otherwise they'd treat the time
+    // that elapsed before sim was enabled as already "spent" and skip ahead.
+    setActiveJourney((prev) =>
+      prev ? { ...prev, autoSimulation: true, simulationSpeed: speed, phaseStartedAt: Date.now() } : prev,
+    );
     toast.info(`Mô phỏng tự động đã bắt đầu (tốc độ ${speed}x)`, { duration: 3000 });
   }, []);
 
@@ -211,41 +237,51 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const setSimulationSpeed = useCallback((speed: number) => {
-    setActiveJourney((prev) => (prev ? { ...prev, simulationSpeed: speed } : prev));
+    // Rebase phaseStartedAt so a speed change feels like a smooth retiming
+    // rather than a hard jump (e.g. 1x → 10x with 25s elapsed shouldn't suddenly
+    // "owe" 250s of virtual time which would instantly fire the next phase).
+    setActiveJourney((prev) => {
+      if (!prev) return prev;
+      const oldSpeed = prev.simulationSpeed || 1;
+      const oldStart = prev.phaseStartedAt || Date.now();
+      const elapsedReal = Date.now() - oldStart;
+      const virtualElapsed = elapsedReal * oldSpeed;
+      // Compute a new phaseStartedAt such that elapsed*newSpeed = virtualElapsed
+      const newStart = Date.now() - virtualElapsed / speed;
+      return { ...prev, simulationSpeed: speed, phaseStartedAt: newStart };
+    });
   }, []);
 
   const endJourney = useCallback(() => {
     setActiveJourney(null);
   }, []);
 
-  // Auto-simulation effect: automatically advance phases based on simulation speed
+  // Auto-simulation effect: automatically advance phases based on simulation
+  // speed. Schedules a single timer per (phase, speed, autoSim) tuple. The
+  // remaining time uses phaseStartedAt so a phase change mid-flight (manual
+  // skip) and a speed change both behave intuitively.
   useEffect(() => {
     if (!activeJourney?.autoSimulation) return;
+    const currentPhase = activeJourney.phase;
+    if (currentPhase === "arrived") return;
 
     const speed = activeJourney.simulationSpeed || 1;
-    // Base times for each phase (in seconds at 1x speed)
-    const phaseDurations: Record<JourneyPhase, number> = {
-      waiting_shuttle: 30,   // 30s waiting for shuttle
-      shuttle_onboard: 20,   // 20s shuttle ride
-      at_terminal: 30,       // 30s finding bus
-      boarded: 15,           // 15s before departure
-      in_transit: 45,        // 45s traveling
-      near_rest: 10,         // 10s before rest stop
-      at_rest: 25,           // 25s at rest stop
-      resuming: 30,          // 30s final leg
-      arrived: 999999,       // Stay at arrived
-    };
+    const baseSec = PHASE_DURATIONS_SEC[currentPhase];
+    const phaseStart = activeJourney.phaseStartedAt || Date.now();
+    const realElapsed = (Date.now() - phaseStart) / 1000;
+    const virtualElapsed = realElapsed * speed;
+    const virtualRemaining = Math.max(0, baseSec - virtualElapsed);
+    const realRemaining = virtualRemaining / speed;
 
-    const currentPhase = activeJourney.phase;
-    const duration = phaseDurations[currentPhase] / speed;
-
-    const timer = setTimeout(() => {
-      if (currentPhase === "arrived") return;
-      advancePhase();
-    }, duration * 1000);
-
+    const timer = setTimeout(() => advancePhase(), realRemaining * 1000);
     return () => clearTimeout(timer);
-  }, [activeJourney?.autoSimulation, activeJourney?.simulationSpeed, activeJourney?.phase, advancePhase]);
+  }, [
+    activeJourney?.autoSimulation,
+    activeJourney?.simulationSpeed,
+    activeJourney?.phase,
+    activeJourney?.phaseStartedAt,
+    advancePhase,
+  ]);
 
   const value = useMemo<JourneyContextValue>(
     () => ({

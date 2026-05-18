@@ -1,34 +1,39 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useJourney, PHASE_ORDER, PHASE_INFO, type JourneyPhase } from "@/contexts/JourneyContext";
+import {
+  useJourney,
+  PHASE_ORDER,
+  PHASE_INFO,
+  PHASE_DURATIONS_SEC,
+  type JourneyPhase,
+} from "@/contexts/JourneyContext";
 import { madaguiRestStop } from "@/data/restStop";
 import { PageShell } from "@/components/PageShell";
 
-// Countdown hook for displaying time remaining
-function useCountdown(targetTime: string | undefined): { minutes: number; seconds: number; isExpired: boolean; text: string } {
+// Re-render every second so any time-derived UI (countdowns, elapsed bars,
+// distance ETAs) stays current.
+function useTick(intervalMs = 1000): number {
   const [now, setNow] = useState(Date.now());
-
   useEffect(() => {
-    if (!targetTime) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [targetTime]);
+    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
+}
 
-  if (!targetTime) return { minutes: 0, seconds: 0, isExpired: true, text: "--:--" };
-
-  const target = new Date(targetTime).getTime();
-  const diff = Math.max(0, target - now);
-  const minutes = Math.floor(diff / 60000);
-  const seconds = Math.floor((diff % 60000) / 1000);
-  const isExpired = diff <= 0;
-
-  return {
-    minutes,
-    seconds,
-    isExpired,
-    text: isExpired ? "00:00" : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-  };
+// Format seconds as mm:ss (or hh:mm when > 1 hour, to keep ETA badges readable).
+function formatDuration(totalSec: number): string {
+  if (!isFinite(totalSec) || totalSec < 0) return "--:--";
+  const s = Math.max(0, Math.floor(totalSec));
+  if (s >= 3600) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 // Journey Tracker — the user's home base while a journey is active.
@@ -49,10 +54,37 @@ export const TripProgress = () => {
     setSimulationSpeed,
   } = useJourney();
 
-  // Countdowns
-  const shuttleCountdown = useCountdown(activeJourney?.shuttleArrivalTime);
-  const departureCountdown = useCountdown(activeJourney?.busDepartureTime);
-  const etaCountdown = useCountdown(activeJourney?.estimatedArrivalTime);
+  // Tick once per second so countdowns refresh visually.
+  const now = useTick(1000);
+
+  // Compute the per-phase countdown in seconds. Two modes:
+  //   • Auto-sim ON  → countdown is the simulated time remaining in the current
+  //                    phase (so 1x = real seconds, 5x = 5× faster). Stays in
+  //                    sync with the auto-advance timer in JourneyContext.
+  //   • Auto-sim OFF → countdown is the wall-clock time until the absolute
+  //                    target (shuttle arrival / bus departure / ETA), which is
+  //                    what real riders would actually see in production.
+  const phase = activeJourney?.phase;
+  const phaseStart = activeJourney?.phaseStartedAt;
+  const speed = activeJourney?.simulationSpeed || 1;
+  const isSimulating = !!activeJourney?.autoSimulation;
+
+  const phaseRemainingSec = (() => {
+    if (!phase || !phaseStart) return 0;
+    const baseSec = PHASE_DURATIONS_SEC[phase];
+    const realElapsed = (now - phaseStart) / 1000;
+    const virtualElapsed = realElapsed * speed;
+    return Math.max(0, baseSec - virtualElapsed);
+  })();
+
+  const wallClockRemaining = (iso: string | undefined): number => {
+    if (!iso) return 0;
+    return Math.max(0, (new Date(iso).getTime() - now) / 1000);
+  };
+
+  const shuttleSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.shuttleArrivalTime);
+  const departureSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.busDepartureTime);
+  const etaSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.estimatedArrivalTime);
 
   // If the user lands here without an active journey (refresh after journey ended, shared URL, etc),
   // send them home with a friendly toast instead of rendering a blank shell.
@@ -90,9 +122,9 @@ export const TripProgress = () => {
     }
   }, [activeJourney?.phase, activeJourney]);
 
-  if (!activeJourney) return null;
+  if (!activeJourney || !phase) return null;
 
-  const { booking, phase, cart, pickedUp, foundBusAtTerminal } = activeJourney;
+  const { booking, cart, pickedUp, foundBusAtTerminal } = activeJourney;
   const { trip, seats } = booking;
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const phaseIdx = PHASE_ORDER.indexOf(phase);
@@ -149,25 +181,31 @@ export const TripProgress = () => {
                 <div className="text-right">
                   {phase === "waiting_shuttle" && (
                     <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Xe đến sau</div>
-                      <div className={`text-xl font-mono font-bold ${shuttleCountdown.isExpired ? "text-red-500" : "text-orange-600"}`}>
-                        {shuttleCountdown.text}
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
+                        {isSimulating ? "Còn lại (mô phỏng)" : "Xe đến sau"}
+                      </div>
+                      <div className={`text-xl font-mono font-bold ${shuttleSec <= 0 ? "text-red-500" : "text-orange-600"}`}>
+                        {formatDuration(shuttleSec)}
                       </div>
                     </div>
                   )}
                   {phase === "at_terminal" && (
                     <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Xe khởi hành</div>
-                      <div className={`text-xl font-mono font-bold ${departureCountdown.isExpired ? "text-red-500" : "text-orange-600"}`}>
-                        {departureCountdown.text}
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
+                        {isSimulating ? "Còn lại (mô phỏng)" : "Xe khởi hành"}
+                      </div>
+                      <div className={`text-xl font-mono font-bold ${departureSec <= 0 ? "text-red-500" : "text-orange-600"}`}>
+                        {formatDuration(departureSec)}
                       </div>
                     </div>
                   )}
-                  {(phase === "in_transit" || phase === "near_rest" || phase === "at_rest" || phase === "resuming") && (
+                  {(phase === "in_transit" || phase === "near_rest" || phase === "at_rest" || phase === "resuming" || phase === "shuttle_onboard" || phase === "boarded") && (
                     <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Còn lại</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
+                        {isSimulating ? "Còn lại (mô phỏng)" : "Còn lại"}
+                      </div>
                       <div className="text-xl font-mono font-bold text-orange-600">
-                        {etaCountdown.text}
+                        {formatDuration(etaSec)}
                       </div>
                     </div>
                   )}
