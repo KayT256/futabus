@@ -1,9 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useJourney, PHASE_ORDER, PHASE_INFO, type JourneyPhase } from "@/contexts/JourneyContext";
 import { madaguiRestStop } from "@/data/restStop";
 import { PageShell } from "@/components/PageShell";
+
+// Countdown hook for displaying time remaining
+function useCountdown(targetTime: string | undefined): { minutes: number; seconds: number; isExpired: boolean; text: string } {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!targetTime) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [targetTime]);
+
+  if (!targetTime) return { minutes: 0, seconds: 0, isExpired: true, text: "--:--" };
+
+  const target = new Date(targetTime).getTime();
+  const diff = Math.max(0, target - now);
+  const minutes = Math.floor(diff / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  const isExpired = diff <= 0;
+
+  return {
+    minutes,
+    seconds,
+    isExpired,
+    text: isExpired ? "00:00" : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+  };
+}
 
 // Journey Tracker — the user's home base while a journey is active.
 // 9 phases drive what the screen shows. The button labels change to reflect
@@ -14,7 +40,19 @@ import { PageShell } from "@/components/PageShell";
 
 export const TripProgress = () => {
   const navigate = useNavigate();
-  const { activeJourney, advancePhase, endJourney } = useJourney();
+  const {
+    activeJourney,
+    advancePhase,
+    endJourney,
+    startAutoSimulation,
+    stopAutoSimulation,
+    setSimulationSpeed,
+  } = useJourney();
+
+  // Countdowns
+  const shuttleCountdown = useCountdown(activeJourney?.shuttleArrivalTime);
+  const departureCountdown = useCountdown(activeJourney?.busDepartureTime);
+  const etaCountdown = useCountdown(activeJourney?.estimatedArrivalTime);
 
   // If the user lands here without an active journey (refresh after journey ended, shared URL, etc),
   // send them home with a friendly toast instead of rendering a blank shell.
@@ -103,9 +141,36 @@ export const TripProgress = () => {
             <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200">
               <div className="flex items-center gap-3">
                 <div className="text-3xl">{info.emoji}</div>
-                <div>
+                <div className="flex-1">
                   <div className="font-semibold text-slate-900">{info.label}</div>
                   <div className="text-xs text-slate-500">{info.sub}</div>
+                </div>
+                {/* Countdown Timer */}
+                <div className="text-right">
+                  {phase === "waiting_shuttle" && (
+                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Xe đến sau</div>
+                      <div className={`text-xl font-mono font-bold ${shuttleCountdown.isExpired ? "text-red-500" : "text-orange-600"}`}>
+                        {shuttleCountdown.text}
+                      </div>
+                    </div>
+                  )}
+                  {phase === "at_terminal" && (
+                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Xe khởi hành</div>
+                      <div className={`text-xl font-mono font-bold ${departureCountdown.isExpired ? "text-red-500" : "text-orange-600"}`}>
+                        {departureCountdown.text}
+                      </div>
+                    </div>
+                  )}
+                  {(phase === "in_transit" || phase === "near_rest" || phase === "at_rest" || phase === "resuming") && (
+                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
+                      <div className="text-[10px] text-slate-500 uppercase font-semibold">Còn lại</div>
+                      <div className="text-xl font-mono font-bold text-orange-600">
+                        {etaCountdown.text}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -353,6 +418,75 @@ export const TripProgress = () => {
               </button>
             </>
           )}
+        </section>
+
+        {/* Auto-simulation controls */}
+        <section className="border-t border-slate-200 pt-4">
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎮</span>
+                <span className="font-semibold text-sm text-slate-900">Mô phỏng tự động</span>
+              </div>
+              {activeJourney.autoSimulation && (
+                <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded-full animate-pulse">
+                  Đang chạy {activeJourney.simulationSpeed || 1}x
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mb-3">
+              Tự động chuyển qua các giai đoạn mà không cần tương tác. Hữu ích cho demo.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {!activeJourney.autoSimulation ? (
+                <>
+                  <button
+                    onClick={() => startAutoSimulation(1)}
+                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    ▶️ Chạy 1x
+                  </button>
+                  <button
+                    onClick={() => startAutoSimulation(2)}
+                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    ⏩ Chạy 2x
+                  </button>
+                  <button
+                    onClick={() => startAutoSimulation(5)}
+                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    ⏩⏩ Chạy 5x
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={stopAutoSimulation}
+                    className="px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 hover:bg-red-100"
+                  >
+                    ⏹️ Dừng
+                  </button>
+                  <div className="flex items-center gap-1 ml-2">
+                    <span className="text-xs text-slate-500">Tốc độ:</span>
+                    {[1, 2, 5, 10].map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => setSimulationSpeed(speed)}
+                        className={`w-8 h-7 rounded text-xs font-medium ${
+                          (activeJourney.simulationSpeed || 1) === speed
+                            ? "bg-orange-500 text-white"
+                            : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </section>
       </div>
     </PageShell>

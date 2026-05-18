@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { trips } from "@/data/trips";
 import { ALL_REVIEWS } from "@/data/reviews";
 import { useReviewAnalytics } from "@/hooks/useReviewAnalytics";
@@ -334,38 +335,32 @@ export const CrewScoreDashboard = () => {
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-8">
-                  {/* SVG Donut */}
-                  <div className="relative shrink-0">
-                    <svg viewBox="0 0 160 160" className="w-40 h-40 -rotate-90">
-                      {(() => {
-                        const r = 60, cx = 80, cy = 80;
-                        const circ = 2 * Math.PI * r;
-                        const segments = [
-                          { pct: nlp.positivePct / 100, color: "#22c55e" },
-                          { pct: nlp.neutralPct / 100,  color: "#f59e0b" },
-                          { pct: nlp.negativePct / 100, color: "#ef4444" },
-                        ];
-                        let offset = 0;
-                        return segments.map((seg, i) => {
-                          const dash = seg.pct * circ;
-                          const gap  = circ - dash;
-                          const el = (
-                            <circle
-                              key={i}
-                              cx={cx} cy={cy} r={r}
-                              fill="none"
-                              stroke={seg.color}
-                              strokeWidth="28"
-                              strokeDasharray={`${dash} ${gap}`}
-                              strokeDashoffset={-offset * circ}
-                            />
-                          );
-                          offset += seg.pct;
-                          return el;
-                        });
-                      })()}
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {/* Recharts Donut */}
+                  <div className="relative shrink-0 w-40 h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: "Tích cực", value: nlp.positive, color: "#22c55e" },
+                            { name: "Trung lập", value: nlp.neutral, color: "#f59e0b" },
+                            { name: "Tiêu cực", value: nlp.negative, color: "#ef4444" },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={3}
+                          dataKey="value"
+                          startAngle={90}
+                          endAngle={-270}
+                        >
+                          <Cell fill="#22c55e" />
+                          <Cell fill="#f59e0b" />
+                          <Cell fill="#ef4444" />
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                       <span className="text-2xl font-extrabold text-slate-900">{nlp.positivePct.toFixed(0)}%</span>
                       <span className="text-xs text-slate-500 font-medium">Tích cực</span>
                     </div>

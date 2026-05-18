@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { getDriverReviews, type Review, type Sentiment } from "@/data/reviews";
 import { useReviewAnalytics } from "@/hooks/useReviewAnalytics";
 import { trips } from "@/data/trips";
@@ -468,38 +469,44 @@ export const CrewScoreDetail = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                {/* mini donut */}
-                <div className="relative shrink-0">
-                  <svg viewBox="0 0 80 80" className="w-16 h-16 -rotate-90">
-                    {(() => {
-                      const r = 28, cx = 40, cy = 40, circ = 2 * Math.PI * r;
-                      const segs = [
-                        { pct: nlp.positivePct / 100, color: "#22c55e" },
-                        { pct: nlp.neutralPct  / 100, color: "#f59e0b" },
-                        { pct: nlp.negativePct / 100, color: "#ef4444" },
-                      ];
-                      let off = 0;
-                      return segs.map((s, i) => {
-                        const dash = s.pct * circ;
-                        const el = <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="13" strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-off * circ} />;
-                        off += s.pct;
-                        return el;
-                      });
-                    })()}
-                  </svg>
+                {/* Recharts Donut Chart */}
+                <div className="relative shrink-0 w-20 h-20">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Tích cực", value: nlp.positive, color: "#22c55e" },
+                          { name: "Trung lập", value: nlp.neutral, color: "#f59e0b" },
+                          { name: "Tiêu cực", value: nlp.negative, color: "#ef4444" },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={22}
+                        outerRadius={35}
+                        paddingAngle={2}
+                        dataKey="value"
+                        startAngle={90}
+                        endAngle={-270}
+                      >
+                        <Cell fill="#22c55e" />
+                        <Cell fill="#f59e0b" />
+                        <Cell fill="#ef4444" />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-extrabold text-slate-900">{nlp.positivePct.toFixed(0)}%</span>
+                    <span className="text-sm font-extrabold text-slate-900">{nlp.positivePct.toFixed(0)}%</span>
                   </div>
                 </div>
                 <div className="flex-1 grid grid-cols-3 gap-2">
                   {[
-                    { label: "😊 Tích cực", count: nlp.positive, pct: nlp.positivePct, bar: "bg-green-400" },
-                    { label: "😐 Trung lập", count: nlp.neutral,  pct: nlp.neutralPct,  bar: "bg-amber-400" },
-                    { label: "😠 Tiêu cực", count: nlp.negative, pct: nlp.negativePct, bar: "bg-red-400"   },
+                    { label: "😊 Tích cực", count: nlp.positive, pct: nlp.positivePct, color: "#22c55e" },
+                    { label: "😐 Trung lập", count: nlp.neutral,  pct: nlp.neutralPct,  color: "#f59e0b" },
+                    { label: "😠 Tiêu cực", count: nlp.negative, pct: nlp.negativePct, color: "#ef4444" },
                   ].map((row) => (
                     <div key={row.label} className="text-center p-2 bg-slate-50 rounded-xl border border-slate-100">
                       <p className="text-xs text-slate-500 mb-0.5">{row.label}</p>
-                      <p className="text-lg font-extrabold text-slate-900">{row.count}</p>
+                      <p className="text-lg font-extrabold" style={{ color: row.color }}>{row.count}</p>
                       <p className="text-xs text-slate-400">{row.pct.toFixed(1)}%</p>
                     </div>
                   ))}

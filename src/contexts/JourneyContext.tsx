@@ -80,6 +80,13 @@ export interface ActiveJourney {
   // Whether the user has already used the Terminal Map and "found" the bus.
   // Drives whether we show "Find my bus" CTA or "Show my QR" CTA on the Journey screen.
   foundBusAtTerminal: boolean;
+  // Countdown timestamps (ISO strings) for key events
+  shuttleArrivalTime?: string;    // When shuttle will arrive (for trung chuyển)
+  busDepartureTime?: string;      // When bus will leave (for bến xe)
+  estimatedArrivalTime?: string;  // ETA at destination
+  // Auto-simulation state
+  autoSimulation?: boolean;
+  simulationSpeed?: number;       // 1x, 2x, 5x, 10x speed multiplier
 }
 
 interface JourneyContextValue {
@@ -94,6 +101,11 @@ interface JourneyContextValue {
   setCart: (cart: Record<string, number>) => void;
   setPickedUp: (v: boolean) => void;
   setFoundBusAtTerminal: (v: boolean) => void;
+
+  // Auto-simulation controls
+  startAutoSimulation: (speed?: number) => void;
+  stopAutoSimulation: () => void;
+  setSimulationSpeed: (speed: number) => void;
 
   // Called when the user taps "Hoàn thành" on the rating screen — clears everything.
   endJourney: () => void;
@@ -138,12 +150,28 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     const startingPhase: JourneyPhase =
       booking.pickup.pickupType === "terminal" ? "at_terminal" : "waiting_shuttle";
 
+    const now = Date.now();
+    // Set countdown times based on pickup type
+    const shuttleArrivalTime = startingPhase === "waiting_shuttle"
+      ? new Date(now + 8 * 60 * 1000).toISOString()  // 8 min for shuttle
+      : undefined;
+    const busDepartureTime = startingPhase === "at_terminal"
+      ? new Date(now + 15 * 60 * 1000).toISOString()   // 15 min until bus leaves
+      : undefined;
+    // ETA is always set (e.g., 8 hours from now for the trip)
+    const estimatedArrivalTime = new Date(now + 8 * 60 * 60 * 1000).toISOString();
+
     setActiveJourney({
       booking,
       phase: startingPhase,
       cart: {},
       pickedUp: false,
       foundBusAtTerminal: false,
+      shuttleArrivalTime,
+      busDepartureTime,
+      estimatedArrivalTime,
+      autoSimulation: false,
+      simulationSpeed: 1,
     });
   }, []);
 
@@ -172,9 +200,52 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     setActiveJourney((prev) => (prev ? { ...prev, foundBusAtTerminal } : prev));
   }, []);
 
+  const startAutoSimulation = useCallback((speed = 1) => {
+    setActiveJourney((prev) => (prev ? { ...prev, autoSimulation: true, simulationSpeed: speed } : prev));
+    toast.info(`Mô phỏng tự động đã bắt đầu (tốc độ ${speed}x)`, { duration: 3000 });
+  }, []);
+
+  const stopAutoSimulation = useCallback(() => {
+    setActiveJourney((prev) => (prev ? { ...prev, autoSimulation: false } : prev));
+    toast.info("Đã dừng mô phỏng tự động");
+  }, []);
+
+  const setSimulationSpeed = useCallback((speed: number) => {
+    setActiveJourney((prev) => (prev ? { ...prev, simulationSpeed: speed } : prev));
+  }, []);
+
   const endJourney = useCallback(() => {
     setActiveJourney(null);
   }, []);
+
+  // Auto-simulation effect: automatically advance phases based on simulation speed
+  useEffect(() => {
+    if (!activeJourney?.autoSimulation) return;
+
+    const speed = activeJourney.simulationSpeed || 1;
+    // Base times for each phase (in seconds at 1x speed)
+    const phaseDurations: Record<JourneyPhase, number> = {
+      waiting_shuttle: 30,   // 30s waiting for shuttle
+      shuttle_onboard: 20,   // 20s shuttle ride
+      at_terminal: 30,       // 30s finding bus
+      boarded: 15,           // 15s before departure
+      in_transit: 45,        // 45s traveling
+      near_rest: 10,         // 10s before rest stop
+      at_rest: 25,           // 25s at rest stop
+      resuming: 30,          // 30s final leg
+      arrived: 999999,       // Stay at arrived
+    };
+
+    const currentPhase = activeJourney.phase;
+    const duration = phaseDurations[currentPhase] / speed;
+
+    const timer = setTimeout(() => {
+      if (currentPhase === "arrived") return;
+      advancePhase();
+    }, duration * 1000);
+
+    return () => clearTimeout(timer);
+  }, [activeJourney?.autoSimulation, activeJourney?.simulationSpeed, activeJourney?.phase, advancePhase]);
 
   const value = useMemo<JourneyContextValue>(
     () => ({
@@ -185,9 +256,12 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       setCart,
       setPickedUp,
       setFoundBusAtTerminal,
+      startAutoSimulation,
+      stopAutoSimulation,
+      setSimulationSpeed,
       endJourney,
     }),
-    [activeJourney, startJourney, setPhase, advancePhase, setCart, setPickedUp, setFoundBusAtTerminal, endJourney],
+    [activeJourney, startJourney, setPhase, advancePhase, setCart, setPickedUp, setFoundBusAtTerminal, startAutoSimulation, stopAutoSimulation, setSimulationSpeed, endJourney],
   );
 
   return <JourneyContext.Provider value={value}>{children}</JourneyContext.Provider>;
