@@ -49,21 +49,31 @@ function topN(freq: Map<string, number>, n: number): { word: string; count: numb
 // a real NLP pipeline; here we bucket reviews by their tag keywords.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Topic taxonomy. The `icon` field is a stable string the UI maps to a Lucide
+// component — kept as a string here so this hook stays presentation-agnostic
+// and can be re-used in plain text/exports without dragging in React deps.
 const TOPIC_POSITIVE = [
-  { id: "tp1", label: "🛡️ An toàn & Lái xe",      keywords: ["lái xe an toàn", "êm", "ổn định", "chắc tay"] },
-  { id: "tp2", label: "😊 Thái độ phục vụ",         keywords: ["nhiệt tình", "thân thiện", "chu đáo", "lịch sự"] },
-  { id: "tp3", label: "⏰ Đúng giờ & Tiện nghi",    keywords: ["đúng giờ", "xe sạch sẽ", "điều hòa", "chuyên nghiệp"] },
-  { id: "tp4", label: "🧳 Hỗ trợ hành lý",          keywords: ["hỗ trợ hành lý", "hành lý"] },
-  { id: "tp5", label: "🛋️ Không gian thoải mái",    keywords: ["thoải mái", "rộng rãi", "ghế"] },
+  { id: "tp1", icon: "shield-check",   label: "An toàn & Lái xe",      keywords: ["lái xe an toàn", "êm", "ổn định", "chắc tay"] },
+  { id: "tp2", icon: "smile",          label: "Thái độ phục vụ",        keywords: ["nhiệt tình", "thân thiện", "chu đáo", "lịch sự"] },
+  { id: "tp3", icon: "clock",          label: "Đúng giờ & Tiện nghi",   keywords: ["đúng giờ", "xe sạch sẽ", "điều hòa", "chuyên nghiệp"] },
+  { id: "tp4", icon: "luggage",        label: "Hỗ trợ hành lý",         keywords: ["hỗ trợ hành lý", "hành lý"] },
+  { id: "tp5", icon: "armchair",       label: "Không gian thoải mái",   keywords: ["thoải mái", "rộng rãi", "ghế"] },
 ];
 
 const TOPIC_NEGATIVE = [
-  { id: "tn1", label: "⏱️ Trễ giờ",                keywords: ["đến trễ", "không thông báo"] },
-  { id: "tn2", label: "😠 Thái độ không tốt",       keywords: ["thái độ không tốt", "thô lỗ"] },
-  { id: "tn3", label: "🌡️ Điều hòa & Xe cũ",        keywords: ["điều hòa hỏng", "xe cũ"] },
-  { id: "tn4", label: "🚗 Lái xe nguy hiểm",         keywords: ["lái xe ẩu", "nguy hiểm", "lái xe không an toàn"] },
-  { id: "tn5", label: "📦 Hành lý bị hỏng",          keywords: ["hành lý bị hỏng"] },
+  { id: "tn1", icon: "timer-off",      label: "Trễ giờ",                keywords: ["đến trễ", "không thông báo"] },
+  { id: "tn2", icon: "frown",          label: "Thái độ không tốt",      keywords: ["thái độ không tốt", "thô lỗ"] },
+  { id: "tn3", icon: "thermometer",    label: "Điều hòa & Xe cũ",       keywords: ["điều hòa hỏng", "xe cũ"] },
+  { id: "tn4", icon: "alert-triangle", label: "Lái xe nguy hiểm",       keywords: ["lái xe ẩu", "nguy hiểm", "lái xe không an toàn"] },
+  { id: "tn5", icon: "package-x",      label: "Hành lý bị hỏng",        keywords: ["hành lý bị hỏng"] },
 ];
+
+// Normalise Vietnamese text for keyword matching: lowercase + diacritic-aware
+// substring search. We keep diacritics intact (Vietnamese semantics depend on
+// them) but lowercase so "Thoải Mái" matches "thoải mái".
+function normaliseForMatch(s: string): string {
+  return s.toLowerCase().replace(/\s+/g, " ").trim();
+}
 
 function bucketTopics(
   reviews: Review[],
@@ -72,11 +82,19 @@ function bucketTopics(
 ) {
   const pool = reviews.filter((r) => r.sentiment === sentiment);
   return topicDefs.map((td) => {
-    const matching = pool.filter((r) =>
-      r.tags.some((tag) =>
-        td.keywords.some((kw) => tag.toLowerCase().includes(kw.toLowerCase()))
-      )
-    );
+    const kws = td.keywords.map(normaliseForMatch);
+    // Match against BOTH comment text AND the tag array. Previously this only
+    // looked at tags, which meant any topic whose keywords didn't happen to be
+    // in POS_TAGS_POOL/NEG_TAGS_POOL (e.g. "thoải mái", "rộng rãi", "ghế")
+    // would always count zero reviews even though plenty of comments contained
+    // them. Comments are the authoritative signal for an NLP pipeline anyway —
+    // tags are just curated chips on top.
+    const matching = pool.filter((r) => {
+      const haystack = normaliseForMatch(
+        r.comment + " " + r.tags.join(" "),
+      );
+      return kws.some((kw) => haystack.includes(kw));
+    });
     // Pick most-helpful representative reviews to show as topic samples
     // (mirrors the notebook's `show_topic_samples` block).
     const samples = [...matching]
@@ -135,8 +153,8 @@ export interface ReviewAnalytics {
   allPosKeywords: { word: string; count: number }[];   // top 60 — feeds the word cloud
   allNegKeywords: { word: string; count: number }[];
   tagFrequency:   { tag: string; count: number }[];  // all tags
-  posTopics:      { id: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
-  negTopics:      { id: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
+  posTopics:      { id: string; icon: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
+  negTopics:      { id: string; icon: string; label: string; keywords: string[]; count: number; samples: Review[] }[];
   monthlyBreakdown: { month: string; label: string; positive: number; neutral: number; negative: number }[];
 }
 

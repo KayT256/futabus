@@ -2,6 +2,25 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
+  Radar,
+  MapPin,
+  Ticket,
+  AlertTriangle,
+  Phone,
+  UtensilsCrossed,
+  Star,
+  Bus,
+  PartyPopper,
+  Check,
+  ChevronRight,
+  Play,
+  FastForward,
+  Square,
+  CircleGauge,
+  Clock3,
+  type LucideIcon,
+} from "lucide-react";
+import {
   useJourney,
   PHASE_ORDER,
   PHASE_INFO,
@@ -148,68 +167,54 @@ export const TripProgress = () => {
             </div>
           </div>
 
-          {/* Phase progress strip — 9 dots, completed ones in green, current in orange. */}
+          {/* Phase progress strip — 9 dots, completed ones in green, current in orange.
+              Each segment uses a continuous connector line that fills smoothly. */}
           <div className="mt-5">
-            <div className="flex items-center gap-1 overflow-x-auto pb-2">
-              {PHASE_ORDER.map((p, i) => (
-                <div key={p} className="flex items-center gap-1 shrink-0">
-                  <div
-                    className={`w-6 h-6 rounded-full grid place-items-center text-[10px] font-semibold transition-colors ${
-                      i < phaseIdx
-                        ? "bg-emerald-600 text-white"
-                        : i === phaseIdx
-                          ? "bg-orange-500 text-white"
-                          : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {i < phaseIdx ? "✓" : i + 1}
+            <div className="flex items-center pb-2 overflow-x-auto">
+              {PHASE_ORDER.map((p, i) => {
+                const done = i < phaseIdx;
+                const current = i === phaseIdx;
+                return (
+                  <div key={p} className="flex items-center shrink-0">
+                    <div
+                      className={`relative w-7 h-7 rounded-full grid place-items-center text-[11px] font-semibold transition-all duration-300 ${
+                        done
+                          ? "bg-emerald-500 text-white shadow-sm"
+                          : current
+                            ? "bg-orange-500 text-white shadow-md ring-4 ring-orange-100"
+                            : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {done ? <Check size={14} strokeWidth={3} /> : i + 1}
+                    </div>
+                    {i < PHASE_ORDER.length - 1 && (
+                      <div className="w-6 h-0.5 mx-0.5 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className={`h-full transition-all duration-500 ${done ? "w-full bg-emerald-500" : "w-0"}`}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {i < PHASE_ORDER.length - 1 && (
-                    <div className={`w-6 h-0.5 ${i < phaseIdx ? "bg-emerald-600" : "bg-slate-100"}`} />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200">
+            <div className="mt-3 p-4 rounded-2xl bg-gradient-to-br from-orange-50 via-orange-50/70 to-amber-50 border border-orange-100">
               <div className="flex items-center gap-3">
-                <div className="text-3xl">{info.emoji}</div>
-                <div className="flex-1">
-                  <div className="font-semibold text-slate-900">{info.label}</div>
-                  <div className="text-xs text-slate-500">{info.sub}</div>
+                <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-orange-100 grid place-items-center text-2xl shrink-0">
+                  {info.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-slate-900 leading-tight">{info.label}</div>
+                  <div className="text-xs text-slate-600 mt-0.5">{info.sub}</div>
                 </div>
                 {/* Countdown Timer */}
-                <div className="text-right">
-                  {phase === "waiting_shuttle" && (
-                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
-                        {isSimulating ? "Còn lại (mô phỏng)" : "Xe đến sau"}
-                      </div>
-                      <div className={`text-xl font-mono font-bold ${shuttleSec <= 0 ? "text-red-500" : "text-orange-600"}`}>
-                        {formatDuration(shuttleSec)}
-                      </div>
-                    </div>
-                  )}
-                  {phase === "at_terminal" && (
-                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
-                        {isSimulating ? "Còn lại (mô phỏng)" : "Xe khởi hành"}
-                      </div>
-                      <div className={`text-xl font-mono font-bold ${departureSec <= 0 ? "text-red-500" : "text-orange-600"}`}>
-                        {formatDuration(departureSec)}
-                      </div>
-                    </div>
-                  )}
-                  {(phase === "in_transit" || phase === "near_rest" || phase === "at_rest" || phase === "resuming" || phase === "shuttle_onboard" || phase === "boarded") && (
-                    <div className="bg-white rounded-lg px-3 py-2 border border-orange-200 shadow-sm">
-                      <div className="text-[10px] text-slate-500 uppercase font-semibold">
-                        {isSimulating ? "Còn lại (mô phỏng)" : "Còn lại"}
-                      </div>
-                      <div className="text-xl font-mono font-bold text-orange-600">
-                        {formatDuration(etaSec)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <PhaseCountdown
+                  phase={phase}
+                  shuttleSec={shuttleSec}
+                  departureSec={departureSec}
+                  etaSec={etaSec}
+                  isSimulating={isSimulating}
+                />
               </div>
             </div>
           </div>
@@ -220,21 +225,24 @@ export const TripProgress = () => {
               { person: trip.driver, label: "Tài xế", rating: trip.driver.crewScore },
               { person: trip.crew, label: "Phụ xe", rating: trip.crew.rating },
             ].map(({ person, label, rating }) => (
-              <div key={person.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl">
+              <div key={person.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:border-orange-200 hover:bg-orange-50/30 transition-colors">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-200 shrink-0">
                   <img src={person.photo} alt={label} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[11px] text-slate-500">{label}</div>
-                  <div className="font-medium text-sm truncate text-slate-900">{person.name}</div>
-                  <div className="text-[11px] text-orange-600 flex items-center gap-1">⭐ {rating}</div>
+                  <div className="text-[11px] text-slate-500 uppercase tracking-wide font-medium">{label}</div>
+                  <div className="font-semibold text-sm truncate text-slate-900">{person.name}</div>
+                  <div className="text-[11px] text-orange-600 inline-flex items-center gap-1 font-medium">
+                    <Star size={11} className="fill-orange-500 text-orange-500" />
+                    {rating}
+                  </div>
                 </div>
                 <button
                   onClick={() => toast.info(`Đang gọi ${label.toLowerCase()}... (demo)`)}
-                  className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100"
+                  className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center hover:bg-emerald-100 transition-colors shrink-0"
                   aria-label={`Gọi ${label}`}
                 >
-                  📞
+                  <Phone size={14} />
                 </button>
               </div>
             ))}
@@ -246,79 +254,57 @@ export const TripProgress = () => {
           {phase === "waiting_shuttle" && (
             <>
               <ActionBtn
-                icon="📡"
+                Icon={Radar}
                 title="Theo dõi vị trí xe trung chuyển"
                 desc="Mở FUTA Rada — xem xe đến gần bạn"
                 onClick={() => navigate("/futa-rada")}
-                primary
               />
-              <button onClick={advancePhase} className="text-xs text-slate-400 underline">
-                [Demo] Bỏ qua bước này
-              </button>
+              <DemoSkipButton onClick={advancePhase} label="Bỏ qua bước này" />
             </>
           )}
 
           {phase === "shuttle_onboard" && (
             <>
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
-                ✅ Bạn đang trên xe trung chuyển. Dự kiến tới bến trong 12 phút.
-              </div>
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Đã đến bến
-              </button>
+              <StatusBanner tone="emerald">
+                Bạn đang trên xe trung chuyển. Dự kiến tới bến trong 12 phút.
+              </StatusBanner>
+              <PrimaryCta onClick={advancePhase}>Đã đến bến</PrimaryCta>
             </>
           )}
 
           {phase === "at_terminal" && !foundBusAtTerminal && (
             <>
               <ActionBtn
-                icon="🗺️"
+                Icon={MapPin}
                 title="Tìm xe của tôi tại bến"
                 desc="Bản đồ chỉ đường tới đúng vị trí xe Limousine"
                 onClick={() => navigate("/terminal-map")}
-                primary
               />
-              <button onClick={advancePhase} className="text-xs text-slate-400 underline">
-                [Demo] Đã tự tìm thấy
-              </button>
+              <DemoSkipButton onClick={advancePhase} label="Đã tự tìm thấy" />
             </>
           )}
 
           {phase === "at_terminal" && foundBusAtTerminal && (
             <>
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
-                ✅ Đã tìm thấy xe của bạn tại bãi đỗ. Bước tiếp theo: đưa mã QR vé cho nhân viên.
-              </div>
+              <StatusBanner tone="emerald">
+                Đã tìm thấy xe của bạn tại bãi đỗ. Bước tiếp theo: đưa mã QR vé cho nhân viên.
+              </StatusBanner>
               <ActionBtn
-                icon="🎫"
+                Icon={Ticket}
                 title="Xem thông tin chi tiết vé"
                 desc="Hiện mã QR để nhân viên quét — xác nhận lên xe"
                 onClick={() => navigate("/ticket", { state: { from: "journey" } })}
-                primary
               />
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                ✓ Lên xe thành công
-              </button>
+              <PrimaryCta onClick={advancePhase}>Lên xe thành công</PrimaryCta>
             </>
           )}
 
           {phase === "boarded" && (
             <>
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">
-                ✅ Đã lên xe {trip.busType} — ghế {seats.join(", ")}. Chúc bạn hành trình vui vẻ!
-              </div>
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Xe đã khởi hành
-              </button>
+              <StatusBanner tone="emerald">
+                Đã lên xe {trip.busType} — ghế {seats.join(", ")}. Chúc bạn hành trình vui vẻ!
+              </StatusBanner>
+              <PrimaryCta onClick={advancePhase}>Xe đã khởi hành</PrimaryCta>
             </>
           )}
 
@@ -327,26 +313,21 @@ export const TripProgress = () => {
               <RouteVisual progress={0.35} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <ActionBtn
-                  icon="⚠️"
+                  Icon={AlertTriangle}
                   title="Quick Report"
                   desc="Báo cáo vấn đề trên xe"
                   onClick={() => navigate("/quick-report")}
                   compact
                 />
                 <ActionBtn
-                  icon="📞"
+                  Icon={Phone}
                   title="Gọi hotline"
                   desc="1900 6067 hỗ trợ 24/7"
                   onClick={() => toast.info("Đang kết nối hotline 1900 6067")}
                   compact
                 />
               </div>
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Sắp đến trạm dừng (demo)
-              </button>
+              <PrimaryCta onClick={advancePhase}>Sắp đến trạm dừng (demo)</PrimaryCta>
             </>
           )}
 
@@ -354,58 +335,44 @@ export const TripProgress = () => {
             <>
               <RouteVisual progress={0.55} highlightRest />
               <ActionBtn
-                icon="🍽️"
+                Icon={UtensilsCrossed}
                 title="Đặt món tại trạm dừng"
                 desc="Smart Stop — pickup bằng QR khi xe dừng"
                 onClick={() => navigate("/smart-stop")}
                 badge={cartCount > 0 ? `${cartCount} món` : undefined}
-                primary
               />
               <ActionBtn
-                icon="⚠️"
+                Icon={AlertTriangle}
                 title="Quick Report"
                 desc="Báo cáo vấn đề trên xe"
                 onClick={() => navigate("/quick-report")}
                 compact
               />
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Đã đến {madaguiRestStop.name}
-              </button>
+              <PrimaryCta onClick={advancePhase}>Đã đến {madaguiRestStop.name}</PrimaryCta>
             </>
           )}
 
           {phase === "at_rest" && (
             <>
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
-                ⏰ Xe dừng tại Madagui trong <b>{madaguiRestStop.durationMinutes} phút</b>. Hãy pickup đơn hàng của
-                bạn!
-              </div>
+              <StatusBanner tone="amber" Icon={Clock3}>
+                Xe dừng tại Madagui trong <b>{madaguiRestStop.durationMinutes} phút</b>. Hãy pickup đơn hàng của bạn!
+              </StatusBanner>
               {cartCount > 0 ? (
                 <ActionBtn
-                  icon="🎫"
-                  title={pickedUp ? "Đã pickup đơn ✓" : "Mở QR pickup đơn hàng"}
+                  Icon={Ticket}
+                  title={pickedUp ? "Đã pickup đơn" : "Mở QR pickup đơn hàng"}
                   desc={pickedUp ? "Chúc bạn ăn ngon miệng!" : "Quẹt mã tại quầy Smart Stop"}
                   onClick={() => navigate("/smart-stop")}
-                  primary
                 />
               ) : (
                 <ActionBtn
-                  icon="🍽️"
+                  Icon={UtensilsCrossed}
                   title="Đặt món nhanh"
                   desc="Vẫn còn thời gian — đặt và pickup tại quầy"
                   onClick={() => navigate("/smart-stop")}
-                  primary
                 />
               )}
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Xe tiếp tục khởi hành
-              </button>
+              <PrimaryCta onClick={advancePhase}>Xe tiếp tục khởi hành</PrimaryCta>
             </>
           )}
 
@@ -413,36 +380,32 @@ export const TripProgress = () => {
             <>
               <RouteVisual progress={0.78} />
               <ActionBtn
-                icon="⚠️"
+                Icon={AlertTriangle}
                 title="Quick Report"
                 desc="Báo cáo vấn đề trên xe"
                 onClick={() => navigate("/quick-report")}
                 compact
               />
-              <button
-                onClick={advancePhase}
-                className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
-              >
-                Đã đến Đà Lạt
-              </button>
+              <PrimaryCta onClick={advancePhase}>Đã đến Đà Lạt</PrimaryCta>
             </>
           )}
 
           {phase === "arrived" && (
             <>
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                <div className="text-4xl mb-1">🎉</div>
-                <div className="font-semibold text-slate-900">Chuyến đi đã hoàn thành!</div>
-                <div className="text-xs text-slate-500 mt-1">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/60 border border-emerald-200 text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-white shadow-sm grid place-items-center text-emerald-600 mb-3">
+                  <PartyPopper size={26} />
+                </div>
+                <div className="font-bold text-slate-900">Chuyến đi đã hoàn thành!</div>
+                <div className="text-xs text-slate-600 mt-1">
                   Hy vọng bạn có một hành trình tuyệt vời cùng FUTA Bus Lines
                 </div>
               </div>
               <ActionBtn
-                icon="⭐"
+                Icon={Star}
                 title="Đánh giá chuyến đi"
                 desc="Chia sẻ trải nghiệm với tài xế & phụ xe"
                 onClick={() => navigate("/post-trip-feedback", { state: { trip } })}
-                primary
               />
               <button
                 onClick={() => {
@@ -450,7 +413,7 @@ export const TripProgress = () => {
                   navigate("/");
                   toast.success("Đã kết thúc hành trình");
                 }}
-                className="w-full py-3 rounded-full border border-slate-300 text-slate-700 font-medium hover:bg-slate-50"
+                className="w-full py-3 rounded-full border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
               >
                 Đóng hành trình
               </button>
@@ -458,62 +421,62 @@ export const TripProgress = () => {
           )}
         </section>
 
-        {/* Auto-simulation controls */}
+        {/* Auto-simulation controls. Visually de-emphasised (dashed border,
+            slate palette) so stakeholders know it's a demo-only utility and
+            not a real product affordance. */}
         <section className="border-t border-slate-200 pt-4">
-          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <div className="bg-slate-50/80 rounded-xl border border-dashed border-slate-300 p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🎮</span>
-                <span className="font-semibold text-sm text-slate-900">Mô phỏng tự động</span>
+                <div className="w-7 h-7 rounded-lg bg-slate-200 grid place-items-center text-slate-600">
+                  <CircleGauge size={15} />
+                </div>
+                <div>
+                  <span className="font-semibold text-sm text-slate-900">Mô phỏng tự động</span>
+                  <span className="text-[10px] text-slate-500 ml-2 uppercase tracking-wide font-medium">Demo</span>
+                </div>
               </div>
               {activeJourney.autoSimulation && (
-                <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded-full animate-pulse">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Đang chạy {activeJourney.simulationSpeed || 1}x
                 </span>
               )}
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Tự động chuyển qua các giai đoạn mà không cần tương tác. Hữu ích cho demo.
+              Tự động chuyển qua các giai đoạn mà không cần tương tác. Hữu ích cho demo & QA.
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {!activeJourney.autoSimulation ? (
                 <>
-                  <button
-                    onClick={() => startAutoSimulation(1)}
-                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                  >
-                    ▶️ Chạy 1x
-                  </button>
-                  <button
-                    onClick={() => startAutoSimulation(2)}
-                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                  >
-                    ⏩ Chạy 2x
-                  </button>
-                  <button
-                    onClick={() => startAutoSimulation(5)}
-                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                  >
-                    ⏩⏩ Chạy 5x
-                  </button>
+                  <SimBtn onClick={() => startAutoSimulation(1)} Icon={Play}>
+                    Chạy 1x
+                  </SimBtn>
+                  <SimBtn onClick={() => startAutoSimulation(2)} Icon={FastForward}>
+                    Chạy 2x
+                  </SimBtn>
+                  <SimBtn onClick={() => startAutoSimulation(5)} Icon={FastForward}>
+                    Chạy 5x
+                  </SimBtn>
                 </>
               ) : (
                 <>
                   <button
                     onClick={stopAutoSimulation}
-                    className="px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 hover:bg-red-100"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 hover:bg-red-100 transition"
                   >
-                    ⏹️ Dừng
+                    <Square size={12} className="fill-red-700" />
+                    Dừng
                   </button>
                   <div className="flex items-center gap-1 ml-2">
-                    <span className="text-xs text-slate-500">Tốc độ:</span>
+                    <span className="text-xs text-slate-500 mr-1">Tốc độ:</span>
                     {[1, 2, 5, 10].map((speed) => (
                       <button
                         key={speed}
                         onClick={() => setSimulationSpeed(speed)}
-                        className={`w-8 h-7 rounded text-xs font-medium ${
+                        className={`w-9 h-7 rounded-md text-xs font-bold transition ${
                           (activeJourney.simulationSpeed || 1) === speed
-                            ? "bg-orange-500 text-white"
+                            ? "bg-orange-500 text-white shadow-sm"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -531,39 +494,143 @@ export const TripProgress = () => {
   );
 };
 
-// Reusable action button used by phase-specific CTAs. The `primary` variant is the
-// big orange one, `compact` is the smaller side-by-side variant for secondary actions.
+// Reusable action button used by phase-specific CTAs. Now accepts a Lucide
+// icon component (rather than an emoji string) so the rendered icon scales
+// crisply at any size and inherits theming via `currentColor`.
 const ActionBtn = ({
-  icon,
+  Icon,
   title,
   desc,
   onClick,
   badge,
   compact,
 }: {
-  icon: string;
+  Icon: LucideIcon;
   title: string;
   desc: string;
   onClick: () => void;
   badge?: string;
   compact?: boolean;
-  primary?: boolean;
 }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center gap-3 p-4 border border-orange-200 bg-orange-50/60 rounded-xl text-left hover:bg-orange-50 transition"
+    className="group w-full flex items-center gap-3 p-4 border border-orange-200 bg-gradient-to-br from-orange-50/80 to-white rounded-xl text-left hover:border-orange-300 hover:shadow-sm hover:from-orange-50 transition-all"
   >
-    <div className="w-10 h-10 rounded-lg bg-orange-500 text-white grid place-items-center text-lg flex-shrink-0">
-      {icon}
+    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white grid place-items-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+      <Icon size={20} strokeWidth={2.25} />
     </div>
     <div className="flex-1 min-w-0">
       <div className="font-semibold text-sm flex items-center gap-2 text-slate-900">
-        {title}
-        {badge && <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full">{badge}</span>}
+        <span className="truncate">{title}</span>
+        {badge && (
+          <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full shrink-0">
+            {badge}
+          </span>
+        )}
       </div>
-      <div className={`text-xs text-slate-500 ${compact ? "line-clamp-1" : ""}`}>{desc}</div>
+      <div className={`text-xs text-slate-500 mt-0.5 ${compact ? "line-clamp-1" : ""}`}>{desc}</div>
     </div>
-    <span className="text-orange-500 text-lg">→</span>
+    <ChevronRight size={18} className="text-orange-400 group-hover:text-orange-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+  </button>
+);
+
+// Phase countdown chip — reused by every active phase. Extracted because the
+// trio of inline JSX blocks were drifting visually as we added phases.
+const PhaseCountdown = ({
+  phase,
+  shuttleSec,
+  departureSec,
+  etaSec,
+  isSimulating,
+}: {
+  phase: JourneyPhase;
+  shuttleSec: number;
+  departureSec: number;
+  etaSec: number;
+  isSimulating: boolean;
+}) => {
+  let label: string | null = null;
+  let seconds = 0;
+  if (phase === "waiting_shuttle")     { label = isSimulating ? "Giả lập" : "Xe đến sau"; seconds = shuttleSec; }
+  else if (phase === "at_terminal")    { label = isSimulating ? "Giả lập" : "Xe khởi hành"; seconds = departureSec; }
+  else if (["shuttle_onboard", "boarded", "in_transit", "near_rest", "at_rest", "resuming"].includes(phase))
+                                       { label = isSimulating ? "Giả lập" : "Còn lại"; seconds = etaSec; }
+  if (!label) return null;
+  const expired = seconds <= 0;
+  return (
+    <div className="text-right shrink-0">
+      <div className="bg-white rounded-xl px-3 py-2 border border-orange-200 shadow-sm">
+        <div className="text-[10px] text-slate-500 uppercase font-semibold tracking-wide">{label}</div>
+        <div className={`text-xl font-mono font-bold tabular-nums ${expired ? "text-red-500" : "text-orange-600"}`}>
+          {formatDuration(seconds)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Primary CTA button used for phase advancement. Pulled out so the orange
+// pill style stays consistent across all 9 phases.
+const PrimaryCta = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    className="w-full py-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-sm hover:from-orange-600 hover:to-orange-700 hover:shadow-md active:scale-[0.99] transition-all"
+  >
+    {children}
+  </button>
+);
+
+// Inline informational banner. Tones cover the two used in this view; easy
+// to extend (sky / red) without touching call sites.
+const StatusBanner = ({
+  children,
+  tone,
+  Icon,
+}: {
+  children: React.ReactNode;
+  tone: "emerald" | "amber";
+  Icon?: LucideIcon;
+}) => {
+  const styles = tone === "emerald"
+    ? { wrap: "bg-emerald-50 border-emerald-200 text-emerald-800", icon: "text-emerald-600" }
+    : { wrap: "bg-amber-50 border-amber-200 text-amber-800",     icon: "text-amber-600" };
+  const Resolved = Icon ?? Check;
+  return (
+    <div className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${styles.wrap}`}>
+      <Resolved size={18} className={`shrink-0 mt-0.5 ${styles.icon}`} />
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+};
+
+// Demo affordance: small underline button to skip a phase without going
+// through its real interaction. Standardised so its visual weight stays
+// consistently low regardless of which phase renders it.
+const DemoSkipButton = ({ onClick, label }: { onClick: () => void; label: string }) => (
+  <button
+    onClick={onClick}
+    className="w-full text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+  >
+    [Demo] {label}
+  </button>
+);
+
+// Compact button for the simulation controls strip.
+const SimBtn = ({
+  onClick,
+  Icon,
+  children,
+}: {
+  onClick: () => void;
+  Icon: LucideIcon;
+  children: React.ReactNode;
+}) => (
+  <button
+    onClick={onClick}
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition"
+  >
+    <Icon size={12} />
+    {children}
   </button>
 );
 
@@ -572,37 +639,43 @@ const ActionBtn = ({
 const RouteVisual = ({ progress, highlightRest }: { progress: number; highlightRest?: boolean }) => {
   const totalKm = 304;
   return (
-    <div className="p-4 rounded-xl border border-slate-200 bg-white">
-      <div className="flex items-center justify-between text-xs mb-2">
-        <span className="font-medium text-slate-900">TP.HCM</span>
-        <span className="text-slate-500">
+    <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+      <div className="flex items-center justify-between text-xs mb-3">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-orange-500" />
+          <span className="font-semibold text-slate-900">TP.HCM</span>
+        </div>
+        <span className="text-slate-500 font-medium tabular-nums">
           {Math.round(progress * totalKm)} / {totalKm} km
         </span>
-        <span className="font-medium text-slate-900">Đà Lạt</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-slate-900">Đà Lạt</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+        </div>
       </div>
-      <div className="relative h-2 bg-slate-100 rounded-full">
+      <div className="relative h-2.5 bg-slate-100 rounded-full">
         <div
-          className="absolute left-0 top-0 h-full bg-orange-500 rounded-full transition-all"
+          className="absolute left-0 top-0 h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-[width] duration-700 ease-out"
           style={{ width: `${progress * 100}%` }}
         />
         <div
-          className={`absolute top-1/2 -translate-y-1/2 left-[55%] w-3 h-3 rounded-full ${
-            highlightRest ? "bg-amber-500 animate-pulse" : "bg-slate-400"
+          className={`absolute top-1/2 -translate-y-1/2 left-[55%] -ml-1.5 w-3 h-3 rounded-full border-2 border-white ${
+            highlightRest ? "bg-amber-500 animate-pulse shadow-sm" : "bg-slate-400"
           }`}
           title="Trạm Madagui"
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 -ml-2 transition-all"
+          className="absolute top-1/2 -translate-y-1/2 -ml-3 transition-[left] duration-700 ease-out"
           style={{ left: `${progress * 100}%` }}
         >
-          <div className="w-5 h-5 rounded-full bg-white border-2 border-orange-500 grid place-items-center text-[10px]">
-            🚌
+          <div className="w-6 h-6 rounded-full bg-white border-2 border-orange-500 grid place-items-center text-orange-600 shadow-sm">
+            <Bus size={12} strokeWidth={2.5} />
           </div>
         </div>
       </div>
       <div className="mt-2 flex justify-between text-[10px] text-slate-500">
         <span>0 km</span>
-        <span className={highlightRest ? "text-amber-600 font-medium" : ""}>
+        <span className={highlightRest ? "text-amber-600 font-semibold" : ""}>
           {madaguiRestStop.name} 165km
         </span>
         <span>{totalKm} km</span>

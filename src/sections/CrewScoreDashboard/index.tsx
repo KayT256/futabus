@@ -1,10 +1,55 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import {
+  ArrowLeft,
+  TrendingUp,
+  Star,
+  Trophy,
+  AlertOctagon,
+  Search,
+  ChevronRight,
+  Activity,
+  ShieldCheck,
+  Smile,
+  Clock,
+  Luggage,
+  Armchair,
+  TimerOff,
+  Frown,
+  Thermometer,
+  AlertTriangle,
+  PackageX,
+  Sparkles,
+  Brain,
+  Network,
+  SpellCheck,
+  Eraser,
+  ArrowRight,
+  HeartPulse,
+  type LucideIcon,
+} from "lucide-react";
 import { trips } from "@/data/trips";
 import { ALL_REVIEWS } from "@/data/reviews";
 import { useReviewAnalytics } from "@/hooks/useReviewAnalytics";
 import { WordCloud } from "@/components/WordCloud";
+
+// Resolves the icon-name string emitted by `useReviewAnalytics` (kept as a
+// plain string there so the hook stays presentation-agnostic) into a Lucide
+// component. Centralising the mapping here means the data layer never imports
+// React and we get a single audit point for adding new topic categories.
+const TOPIC_ICONS: Record<string, LucideIcon> = {
+  "shield-check":   ShieldCheck,
+  "smile":          Smile,
+  "clock":          Clock,
+  "luggage":        Luggage,
+  "armchair":       Armchair,
+  "timer-off":      TimerOff,
+  "frown":          Frown,
+  "thermometer":    Thermometer,
+  "alert-triangle": AlertTriangle,
+  "package-x":      PackageX,
+};
 
 const mockStaffData = trips.map(trip => trip.driver);
 
@@ -62,24 +107,27 @@ export const CrewScoreDashboard = () => {
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-medium"
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft size={18} />
               Quay lại
             </button>
             <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900">Dashboard Chất Lượng Crew Score</h1>
-              <p className="text-xs text-slate-500 hidden md:block">Quản lý và theo dõi chất lượng nhân viên</p>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 grid place-items-center shadow-sm">
+                <Activity size={18} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-slate-900 leading-tight">Crew Score Dashboard</h1>
+                <p className="text-[11px] text-slate-500 hidden md:block">Quản lý & theo dõi chất lượng nhân viên</p>
+              </div>
             </div>
           </div>
           <div className="flex items-center">
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value as any)}
-              className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 outline-none transition-all"
+              className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block w-full px-3 py-2 outline-none transition-all font-medium"
             >
               <option value="week">Tuần này</option>
               <option value="month">Tháng này</option>
@@ -92,86 +140,42 @@ export const CrewScoreDashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Overview Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Stat Card 1 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slate-500 text-sm font-medium">Điểm trung bình</span>
-              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">4.65</span>
-              <span className="text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full">+0.03</span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">so với tháng trước</p>
-          </div>
-
-          {/* Stat Card 2 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slate-500 text-sm font-medium">Tổng đánh giá</span>
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">
-                {monthlyTrendData[monthlyTrendData.length - 1].totalRatings.toLocaleString()}
-              </span>
-              <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
-                +{((monthlyTrendData[monthlyTrendData.length - 1].totalRatings - monthlyTrendData[monthlyTrendData.length - 2].totalRatings) / monthlyTrendData[monthlyTrendData.length - 2].totalRatings * 100).toFixed(1)}%
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">so với tháng trước</p>
-          </div>
-
-          {/* Stat Card 3 - Improved Trophy Icon */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slate-500 text-sm font-medium">Nhân viên xuất sắc</span>
-              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                  <path d="M4 22h16" />
-                  <path d="M10 14.66V17c0 .55-.47 .98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                  <path d="M14 14.66V17c0 .55.47 .98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">{excellentStaff.length}</span>
-              <span className="text-xs font-semibold text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full">
-                {((excellentStaff.length / mockStaffData.length) * 100).toFixed(0)}%
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">tổng nhân viên</p>
-          </div>
-
-          {/* Stat Card 4 */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slate-500 text-sm font-medium">Cần chú ý</span>
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">{needsAttention.length}</span>
-              <span className="text-xs font-semibold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">
-                &lt; 4.5 Điểm
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-2">điểm số thấp</p>
-          </div>
+          <StatCard
+            label="Điểm trung bình"
+            value="4.65"
+            delta="+0.03"
+            deltaTone="green"
+            footer="so với tháng trước"
+            icon={TrendingUp}
+            iconTone="green"
+          />
+          <StatCard
+            label="Tổng đánh giá"
+            value={monthlyTrendData[monthlyTrendData.length - 1].totalRatings.toLocaleString()}
+            delta={`+${(((monthlyTrendData[monthlyTrendData.length - 1].totalRatings - monthlyTrendData[monthlyTrendData.length - 2].totalRatings) / monthlyTrendData[monthlyTrendData.length - 2].totalRatings) * 100).toFixed(1)}%`}
+            deltaTone="blue"
+            footer="so với tháng trước"
+            icon={Star}
+            iconTone="blue"
+          />
+          <StatCard
+            label="Nhân viên xuất sắc"
+            value={`${excellentStaff.length}`}
+            delta={`${((excellentStaff.length / mockStaffData.length) * 100).toFixed(0)}%`}
+            deltaTone="orange"
+            footer="tổng nhân viên"
+            icon={Trophy}
+            iconTone="orange"
+          />
+          <StatCard
+            label="Cần chú ý"
+            value={`${needsAttention.length}`}
+            delta="< 4.5 điểm"
+            deltaTone="red"
+            footer="điểm số thấp"
+            icon={AlertOctagon}
+            iconTone="red"
+          />
         </div>
 
         {/* Chart & Top Staff Row */}
@@ -239,10 +243,8 @@ export const CrewScoreDashboard = () => {
                     <p className="text-xs text-slate-500 truncate">{staff.employeeCode}</p>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center justify-end gap-1 text-orange-500">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
+                    <div className="flex items-center justify-end gap-1">
+                      <Star size={14} className="text-orange-500 fill-orange-500" />
                       <span className="text-base font-bold text-slate-900">{staff.crewScore}</span>
                     </div>
                   </div>
@@ -266,17 +268,19 @@ export const CrewScoreDashboard = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {[
-              { num: 1, icon: "🧹", title: "Text Cleaning",     desc: "Loại URL, mention, hashtag, ký tự đặc biệt", model: "regex + lang_detect", count: `${nlp.total} → ${nlp.total} VI` },
-              { num: 2, icon: "🔤", title: "Teen Code",         desc: "Chuẩn hoá tiếng lóng & viết tắt",           model: "teencode dictionary", count: "831 từ slang" },
-              { num: 3, icon: "✏️", title: "Spell Correction",  desc: "Sửa lỗi chính tả & dấu câu",                 model: "protonx-legal-tc",    count: "Seq2Seq • beam=10" },
-              { num: 4, icon: "🧠", title: "Sentiment Analysis",desc: "Phân loại POS / NEU / NEG",                   model: "5CD-AI/ViSoBERT",     count: `${nlp.positive}/${nlp.neutral}/${nlp.negative}` },
-              { num: 5, icon: "🧬", title: "Topic Modeling",    desc: "Phân cụm chủ đề tự động",                     model: "BERTopic + Qwen3 + HDBSCAN", count: `${nlp.posTopics.length + nlp.negTopics.length} topics` },
+              { num: 1, Icon: Eraser,     title: "Text Cleaning",      desc: "Loại URL, mention, hashtag, ký tự đặc biệt", model: "regex + lang_detect", count: `${nlp.total} → ${nlp.total} VI` },
+              { num: 2, Icon: Sparkles,   title: "Teen Code",          desc: "Chuẩn hoá tiếng lóng & viết tắt",            model: "teencode dictionary", count: "831 từ slang" },
+              { num: 3, Icon: SpellCheck, title: "Spell Correction",   desc: "Sửa lỗi chính tả & dấu câu",                  model: "protonx-legal-tc",    count: "Seq2Seq • beam=10" },
+              { num: 4, Icon: Brain,      title: "Sentiment Analysis", desc: "Phân loại POS / NEU / NEG",                    model: "5CD-AI/ViSoBERT",     count: `${nlp.positive}/${nlp.neutral}/${nlp.negative}` },
+              { num: 5, Icon: Network,    title: "Topic Modeling",     desc: "Phân cụm chủ đề tự động",                      model: "BERTopic + Qwen3 + HDBSCAN", count: `${nlp.posTopics.length + nlp.negTopics.length} topics` },
             ].map((step, i, arr) => (
               <div key={step.num} className="relative">
-                <div className="border border-slate-200 rounded-xl p-4 bg-gradient-to-br from-slate-50 to-white h-full">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="border border-slate-200 rounded-xl p-4 bg-gradient-to-br from-slate-50 to-white h-full hover:border-orange-200 hover:shadow-sm transition-all">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">{step.num}</span>
-                    <span className="text-2xl leading-none">{step.icon}</span>
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 grid place-items-center text-orange-600">
+                      <step.Icon size={18} />
+                    </div>
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 mb-1">{step.title}</h3>
                   <p className="text-xs text-slate-500 mb-2 leading-snug">{step.desc}</p>
@@ -288,9 +292,7 @@ export const CrewScoreDashboard = () => {
                 {/* Arrow between cards (desktop only) */}
                 {i < arr.length - 1 && (
                   <div className="hidden lg:flex absolute top-1/2 -right-2.5 -translate-y-1/2 w-5 h-5 bg-white rounded-full items-center justify-center text-slate-300 z-10">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight size={14} />
                   </div>
                 )}
               </div>
@@ -330,8 +332,8 @@ export const CrewScoreDashboard = () => {
                     <h3 className="font-bold text-slate-900">Tỷ lệ Tích cực / Trung lập / Tiêu cực</h3>
                     <p className="text-sm text-slate-500">Phân loại tự động bằng 5CD-AI/Vietnamese-Sentiment-visobert</p>
                   </div>
-                  <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${nlp.healthColor === "green" ? "bg-green-50 text-green-700 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-red-50 text-red-700 border-red-200"}`}>
-                    🏥 Sức khỏe: {nlp.healthLabel}
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${nlp.healthColor === "green" ? "bg-green-50 text-green-700 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                    <HeartPulse size={13} /> Sức khỏe: {nlp.healthLabel}
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-8">
@@ -368,13 +370,16 @@ export const CrewScoreDashboard = () => {
                   {/* Bar breakdown */}
                   <div className="flex-1 w-full space-y-4">
                     {[
-                      { label: "😊 Tích cực", count: nlp.positive, pct: nlp.positivePct, color: "bg-green-500" },
-                      { label: "😐 Trung lập", count: nlp.neutral,  pct: nlp.neutralPct,  color: "bg-amber-400" },
-                      { label: "😠 Tiêu cực", count: nlp.negative, pct: nlp.negativePct, color: "bg-red-500" },
+                      { Icon: Smile, label: "Tích cực", count: nlp.positive, pct: nlp.positivePct, color: "bg-green-500",  toneText: "text-green-700" },
+                      { Icon: null,  label: "Trung lập", count: nlp.neutral,  pct: nlp.neutralPct,  color: "bg-amber-400", toneText: "text-amber-700" },
+                      { Icon: Frown, label: "Tiêu cực", count: nlp.negative, pct: nlp.negativePct, color: "bg-red-500",    toneText: "text-red-700" },
                     ].map((row) => (
                       <div key={row.label}>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-sm font-semibold text-slate-700">{row.label}</span>
+                          <span className={`text-sm font-semibold inline-flex items-center gap-1.5 ${row.toneText}`}>
+                            {row.Icon ? <row.Icon size={14} /> : <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />}
+                            {row.label}
+                          </span>
                           <span className="text-sm font-bold text-slate-900">{row.count.toLocaleString()} <span className="text-slate-400 font-normal">({row.pct.toFixed(1)}%)</span></span>
                         </div>
                         <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -382,11 +387,14 @@ export const CrewScoreDashboard = () => {
                         </div>
                       </div>
                     ))}
-                    <div className={`mt-4 p-3 rounded-xl text-sm font-medium border ${nlp.healthColor === "green" ? "bg-green-50 text-green-800 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-800 border-yellow-200" : "bg-red-50 text-red-800 border-red-200"}`}>
-                      {nlp.healthColor === "green" && "🟢 TỐT — Khách hàng phản hồi rất tích cực!"}
-                      {nlp.healthColor === "yellow" && "🟡 TRUNG BÌNH — Cần cải thiện một số điểm."}
-                      {nlp.healthColor === "red" && "🔴 YẾU — Cần xem xét lại chất lượng dịch vụ!"}
-                      <span className="ml-2 font-bold">Điểm sức khỏe: {nlp.healthScore.toFixed(1)}</span>
+                    <div className={`mt-4 p-3 rounded-xl text-sm font-medium border flex items-start gap-2 ${nlp.healthColor === "green" ? "bg-green-50 text-green-800 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-800 border-yellow-200" : "bg-red-50 text-red-800 border-red-200"}`}>
+                      <HeartPulse size={16} className="shrink-0 mt-0.5" />
+                      <div>
+                        {nlp.healthColor === "green" && "TỐT — Khách hàng phản hồi rất tích cực."}
+                        {nlp.healthColor === "yellow" && "TRUNG BÌNH — Cần cải thiện một số điểm."}
+                        {nlp.healthColor === "red" && "YẾU — Cần xem xét lại chất lượng dịch vụ."}
+                        <span className="ml-2 font-bold">Điểm sức khỏe: {nlp.healthScore.toFixed(1)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -428,7 +436,7 @@ export const CrewScoreDashboard = () => {
               {/* Positive keywords */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <span className="text-green-500">😊</span> Từ khóa Tích cực (độc quyền)
+                  <Smile size={18} className="text-green-600" /> Từ khóa Tích cực (độc quyền)
                 </h3>
                 <p className="text-xs text-slate-500 mb-5">Từ xuất hiện chỉ trong review tích cực</p>
                 <div className="space-y-3">
@@ -450,7 +458,7 @@ export const CrewScoreDashboard = () => {
               {/* Negative keywords */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <span className="text-red-500">😠</span> Từ khóa Tiêu cực (độc quyền)
+                  <Frown size={18} className="text-red-600" /> Từ khóa Tiêu cực (độc quyền)
                 </h3>
                 <p className="text-xs text-slate-500 mb-5">Từ xuất hiện chỉ trong review tiêu cực</p>
                 <div className="space-y-3">
@@ -478,9 +486,9 @@ export const CrewScoreDashboard = () => {
                     <thead>
                       <tr className="border-b border-slate-200">
                         <th className="text-left py-2 px-2 font-semibold text-slate-500 w-8">#</th>
-                        <th className="text-left py-2 px-2 font-bold text-green-700">😊 Từ khóa Tích cực</th>
+                        <th className="text-left py-2 px-2 font-bold text-green-700"><span className="inline-flex items-center gap-1.5"><Smile size={14} /> Từ khóa Tích cực</span></th>
                         <th className="text-right py-2 px-2 font-semibold text-slate-500 w-20">Tần suất</th>
-                        <th className="text-left py-2 px-2 font-bold text-red-700">😠 Từ khóa Tiêu cực</th>
+                        <th className="text-left py-2 px-2 font-bold text-red-700"><span className="inline-flex items-center gap-1.5"><Frown size={14} /> Từ khóa Tiêu cực</span></th>
                         <th className="text-right py-2 px-2 font-semibold text-slate-500 w-20">Tần suất</th>
                       </tr>
                     </thead>
@@ -514,7 +522,7 @@ export const CrewScoreDashboard = () => {
                   <WordCloud
                     words={nlp.allPosKeywords}
                     palette="ylgn"
-                    title="😊 PAIN POINT TÍCH CỰC"
+                    title="PAIN POINT TÍCH CỰC"
                     titleColor="#2ecc71"
                     width={720}
                     height={360}
@@ -522,7 +530,7 @@ export const CrewScoreDashboard = () => {
                   <WordCloud
                     words={nlp.allNegKeywords}
                     palette="orrd"
-                    title="😠 PAIN POINT TIÊU CỰC"
+                    title="PAIN POINT TIÊU CỰC"
                     titleColor="#e74c3c"
                     width={720}
                     height={360}
@@ -534,88 +542,20 @@ export const CrewScoreDashboard = () => {
 
           {analyticsTab === "topics" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Positive topics */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <span className="text-green-500">😊</span> Topics Tích cực
-                </h3>
-                <p className="text-xs text-slate-500 mb-5">BERTopic + Qwen3-Embedding-0.6B + HDBSCAN clustering</p>
-                <div className="space-y-4">
-                  {nlp.posTopics.map((t) => {
-                    const maxC = Math.max(...nlp.posTopics.map((x) => x.count), 1);
-                    return (
-                      <div key={t.id} className="border border-green-100 rounded-xl p-4 bg-green-50/40">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-slate-900">{t.label}</span>
-                          <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{t.count} reviews</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {t.keywords.map((kw) => (
-                            <span key={kw} className="text-xs bg-white border border-green-200 text-green-700 px-2 py-0.5 rounded-md">{kw}</span>
-                          ))}
-                        </div>
-                        <div className="h-1.5 bg-green-100 rounded-full overflow-hidden mb-3">
-                          <div className="h-full bg-green-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
-                        </div>
-                        {/* Topic samples — show_topic_samples() */}
-                        {t.samples.length > 0 && (
-                          <div className="border-t border-green-100 pt-2 mt-1">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-green-700 mb-1.5">📝 Review mẫu</p>
-                            <div className="space-y-1.5">
-                              {t.samples.map((s, idx) => (
-                                <div key={s.id} className="text-xs text-slate-600 italic leading-snug">
-                                  <span className="text-green-600 font-bold">[{idx + 1}]</span> "{s.comment.length > 110 ? s.comment.slice(0, 110) + "…" : s.comment}"
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* Negative topics */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <span className="text-red-500">😠</span> Topics Tiêu cực
-                </h3>
-                <p className="text-xs text-slate-500 mb-5">Phân cụm với min_cluster_size=6, nr_topics=5</p>
-                <div className="space-y-4">
-                  {nlp.negTopics.map((t) => {
-                    const maxC = Math.max(...nlp.negTopics.map((x) => x.count), 1);
-                    return (
-                      <div key={t.id} className="border border-red-100 rounded-xl p-4 bg-red-50/40">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-slate-900">{t.label}</span>
-                          <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">{t.count} reviews</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {t.keywords.map((kw) => (
-                            <span key={kw} className="text-xs bg-white border border-red-200 text-red-700 px-2 py-0.5 rounded-md">{kw}</span>
-                          ))}
-                        </div>
-                        <div className="h-1.5 bg-red-100 rounded-full overflow-hidden mb-3">
-                          <div className="h-full bg-red-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
-                        </div>
-                        {/* Topic samples — show_topic_samples() */}
-                        {t.samples.length > 0 && (
-                          <div className="border-t border-red-100 pt-2 mt-1">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-red-700 mb-1.5">📝 Review mẫu</p>
-                            <div className="space-y-1.5">
-                              {t.samples.map((s, idx) => (
-                                <div key={s.id} className="text-xs text-slate-600 italic leading-snug">
-                                  <span className="text-red-600 font-bold">[{idx + 1}]</span> "{s.comment.length > 110 ? s.comment.slice(0, 110) + "…" : s.comment}"
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <TopicColumn
+                title="Topics Tích cực"
+                subtitle="BERTopic + Qwen3-Embedding-0.6B + HDBSCAN clustering"
+                topics={nlp.posTopics}
+                tone="positive"
+                HeaderIcon={Smile}
+              />
+              <TopicColumn
+                title="Topics Tiêu cực"
+                subtitle="Phân cụm với min_cluster_size=6, nr_topics=5"
+                topics={nlp.negTopics}
+                tone="negative"
+                HeaderIcon={Frown}
+              />
             </div>
           )}
         </div>
@@ -633,13 +573,11 @@ export const CrewScoreDashboard = () => {
                 <input
                   type="text"
                   placeholder="Tìm kiếm..."
-                  className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 p-2.5 outline-none transition-all"
+                  className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block w-full pl-10 px-3 py-2 outline-none transition-all"
                 />
-                <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
-              <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 p-2.5 outline-none transition-all hidden sm:block">
+              <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 px-3 py-2 outline-none transition-all hidden sm:block">
                 <option value="">Tất cả trạng thái</option>
                 <option value="excellent">Xuất sắc</option>
                 <option value="good">Tốt</option>
@@ -681,10 +619,8 @@ export const CrewScoreDashboard = () => {
                       {staff.employeeCode}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-orange-500">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
+                      <div className="flex items-center gap-1.5">
+                        <Star size={14} className="text-orange-500 fill-orange-500" />
                         <span className="font-bold text-slate-900">{staff.crewScore}</span>
                       </div>
                     </td>
@@ -702,9 +638,9 @@ export const CrewScoreDashboard = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         onClick={() => navigate(`/crew-score/${staff.id}?from=dashboard`)}
-                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
                       >
-                        Chi tiết
+                        Chi tiết <ChevronRight size={14} />
                       </button>
                     </td>
                   </tr>
@@ -714,6 +650,131 @@ export const CrewScoreDashboard = () => {
           </div>
         </div>
       </main>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Internal sub-components — kept in this file because they're tightly coupled
+// to the dashboard's visual rhythm (consistent card chrome, tone tokens) and
+// don't need to be shared elsewhere.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Tone tokens applied to both the icon chip and the delta pill. Centralised so
+// adding a new stat tone is a one-line change.
+const TONE_TOKENS = {
+  green:  { bg: "bg-green-50",  fg: "text-green-600",  pill: "bg-green-100  text-green-700" },
+  blue:   { bg: "bg-blue-50",   fg: "text-blue-600",   pill: "bg-blue-100   text-blue-700" },
+  orange: { bg: "bg-orange-50", fg: "text-orange-600", pill: "bg-orange-100 text-orange-700" },
+  red:    { bg: "bg-red-50",    fg: "text-red-600",    pill: "bg-red-100    text-red-700" },
+} as const;
+type Tone = keyof typeof TONE_TOKENS;
+
+const StatCard = ({
+  label,
+  value,
+  delta,
+  deltaTone,
+  footer,
+  icon: Icon,
+  iconTone,
+}: {
+  label: string;
+  value: string;
+  delta: string;
+  deltaTone: Tone;
+  footer: string;
+  icon: LucideIcon;
+  iconTone: Tone;
+}) => (
+  <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all">
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-slate-500 text-sm font-medium">{label}</span>
+      <div className={`w-10 h-10 rounded-full grid place-items-center ${TONE_TOKENS[iconTone].bg} ${TONE_TOKENS[iconTone].fg}`}>
+        <Icon size={20} strokeWidth={2.25} />
+      </div>
+    </div>
+    <div className="flex items-baseline gap-2">
+      <span className="text-3xl font-bold text-slate-900">{value}</span>
+      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${TONE_TOKENS[deltaTone].pill}`}>
+        {delta}
+      </span>
+    </div>
+    <p className="text-xs text-slate-400 mt-2">{footer}</p>
+  </div>
+);
+
+// Renders a single column of topic cards (positive or negative). Pulls the
+// per-topic Lucide icon from the `TOPIC_ICONS` map keyed off the icon-name
+// string emitted by the analytics hook.
+const TopicColumn = ({
+  title,
+  subtitle,
+  topics,
+  tone,
+  HeaderIcon,
+}: {
+  title: string;
+  subtitle: string;
+  topics: { id: string; icon: string; label: string; keywords: string[]; count: number; samples: { id: string | number; comment: string }[] }[];
+  tone: "positive" | "negative";
+  HeaderIcon: LucideIcon;
+}) => {
+  const palette = tone === "positive"
+    ? { headerFg: "text-green-600", border: "border-green-100", bg: "bg-green-50/40", pill: "bg-green-100 text-green-700", chipBorder: "border-green-200", chipText: "text-green-700", barBg: "bg-green-100", barFill: "bg-green-400", iconBg: "bg-green-100 text-green-700", sampleAccent: "text-green-700", sampleBorder: "border-green-100" }
+    : { headerFg: "text-red-600",   border: "border-red-100",   bg: "bg-red-50/40",   pill: "bg-red-100 text-red-700",     chipBorder: "border-red-200",   chipText: "text-red-700",   barBg: "bg-red-100",   barFill: "bg-red-400",   iconBg: "bg-red-100 text-red-700",   sampleAccent: "text-red-700",   sampleBorder: "border-red-100" };
+
+  const maxC = Math.max(...topics.map((x) => x.count), 1);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
+        <HeaderIcon size={18} className={palette.headerFg} /> {title}
+      </h3>
+      <p className="text-xs text-slate-500 mb-5">{subtitle}</p>
+      <div className="space-y-4">
+        {topics.map((t) => {
+          const TopicIcon = TOPIC_ICONS[t.icon] ?? Activity;
+          return (
+            <div key={t.id} className={`border ${palette.border} rounded-xl p-4 ${palette.bg}`}>
+              <div className="flex items-center justify-between mb-2 gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${palette.iconBg}`}>
+                    <TopicIcon size={16} />
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 truncate">{t.label}</span>
+                </div>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${palette.pill}`}>
+                  {t.count} reviews
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {t.keywords.map((kw) => (
+                  <span key={kw} className={`text-xs bg-white border ${palette.chipBorder} ${palette.chipText} px-2 py-0.5 rounded-md`}>
+                    {kw}
+                  </span>
+                ))}
+              </div>
+              <div className={`h-1.5 ${palette.barBg} rounded-full overflow-hidden mb-3`}>
+                <div className={`h-full ${palette.barFill} rounded-full transition-all duration-500`} style={{ width: `${(t.count / maxC) * 100}%` }} />
+              </div>
+              {t.samples.length > 0 && (
+                <div className={`border-t ${palette.sampleBorder} pt-2 mt-1`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wide ${palette.sampleAccent} mb-1.5`}>Review mẫu</p>
+                  <div className="space-y-1.5">
+                    {t.samples.map((s, idx) => (
+                      <div key={s.id} className="text-xs text-slate-600 italic leading-snug">
+                        <span className={`font-bold ${palette.sampleAccent}`}>[{idx + 1}]</span>{" "}
+                        "{s.comment.length > 110 ? s.comment.slice(0, 110) + "…" : s.comment}"
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

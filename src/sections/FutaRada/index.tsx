@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Radar, Phone, MessageCircle, MapPin, ChevronRight, Search, X } from "lucide-react";
 import {
   AdvancedMarker,
   APIProvider,
@@ -172,9 +173,12 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
   const [pickup, setPickup] = useState<PickupLocation>(DEFAULT_PICKUP);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // Geocoded coordinates — start with the hardcoded fallbacks so the map
-  // never renders empty, then upgrade once the Geocoder responds.
-  const [originLoc, setOriginLoc] = useState<LatLng>(SHUTTLE_OFFICE.fallbackCoord);
+  // The shuttle dispatch office is a hardcoded location that never moves
+  // (it's a real depot), so we use a stable reference rather than state.
+  // The pickup is state because the rider can change it via the picker;
+  // any new coordinates come from Places Autocomplete with verified lat/lng,
+  // so no separate geocoding pass is needed.
+  const originLoc: LatLng = SHUTTLE_OFFICE.fallbackCoord;
   const [pickupLoc, setPickupLoc] = useState<LatLng>(DEFAULT_PICKUP.fallbackCoord);
   const [pathProfile, setPathProfile] = useState<PathProfile | null>(null);
 
@@ -248,16 +252,21 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
           "Thông tin đón trả" so the rider sees familiar chrome. */}
       <PickupInfoCard pickup={pickup} onEdit={() => setPickerOpen(true)} />
 
-      {/* Compact branded radar — the FUTA Rada signature mark. */}
-      <CompactRadar progress={progress} arrived={arrived} />
-
-      {/* Real Google Maps — satellite/hybrid with shuttle animation. */}
+      {/* The live satellite map IS the FUTA Rada now — the old animated radar
+          circle was a mockup that lived next to the map. Now we own the radar
+          identity at the top of the actual tracking card so users only see
+          one canonical "where is my shuttle" visualization. */}
       <div className="relative bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-zinc-200 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="font-semibold text-sm text-slate-900">Vị trí xe trung chuyển</div>
-            <div className="text-[11px] text-slate-500 truncate">
-              {SHUTTLE_OFFICE.name} → {pickup.shortLabel}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 grid place-items-center shrink-0 shadow-sm">
+              <Radar size={16} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-sm text-slate-900 leading-tight">FUTA Rada</div>
+              <div className="text-[11px] text-slate-500 truncate">
+                {SHUTTLE_OFFICE.name} → {pickup.shortLabel}
+              </div>
             </div>
           </div>
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 shrink-0">
@@ -271,10 +280,6 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
             originLoc={originLoc}
             pickupLoc={pickupLoc}
             busLoc={busLoc}
-            originAddress={SHUTTLE_OFFICE.address}
-            pickupAddress={pickup.address}
-            onOriginGeocoded={setOriginLoc}
-            onPickupGeocoded={setPickupLoc}
             onPathReady={setPathProfile}
           />
         </div>
@@ -290,15 +295,15 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => toast.info("Đang gọi tài xế xe trung chuyển... (demo)")}
-          className="py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium hover:bg-slate-50"
+          className="flex items-center justify-center gap-2 py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          📞 Gọi tài xế
+          <Phone size={15} className="text-emerald-600" /> Gọi tài xế
         </button>
         <button
           onClick={() => toast.info("Mở chat (demo)")}
-          className="py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium hover:bg-slate-50"
+          className="flex items-center justify-center gap-2 py-2.5 rounded-full bg-white border border-zinc-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          💬 Nhắn tin
+          <MessageCircle size={15} className="text-orange-600" /> Nhắn tin
         </button>
       </div>
 
@@ -435,19 +440,11 @@ const RadaMap = ({
   originLoc,
   pickupLoc,
   busLoc,
-  originAddress,
-  pickupAddress,
-  onOriginGeocoded,
-  onPickupGeocoded,
   onPathReady,
 }: {
   originLoc: LatLng;
   pickupLoc: LatLng;
   busLoc: LatLng;
-  originAddress: string;
-  pickupAddress: string;
-  onOriginGeocoded: (l: LatLng) => void;
-  onPickupGeocoded: (l: LatLng) => void;
   onPathReady: (p: PathProfile) => void;
 }) => {
   // Default center: midway between origin and pickup so both pins show in
@@ -471,8 +468,11 @@ const RadaMap = ({
       disableDefaultUI
       zoomControl
     >
-      <Geocode address={originAddress} onResolved={onOriginGeocoded} />
-      <Geocode address={pickupAddress} onResolved={onPickupGeocoded} />
+      {/* We deliberately do NOT run the Geocoder for the office or pickup
+          addresses anymore. Both already arrive with trustworthy coordinates
+          (the office is a hardcoded constant, and Places Autocomplete returns
+          a geocoded result via place_id when the user picks a custom point).
+          Skipping geocoding cuts ~600-1200ms off first-paint of the route. */}
       <FitBounds origin={originLoc} pickup={pickupLoc} />
       <DrivingDirections origin={originLoc} dest={pickupLoc} onPathReady={onPathReady} />
       <AdvancedMarker position={pickupLoc} title="Điểm đón của bạn">
@@ -486,38 +486,6 @@ const RadaMap = ({
       </AdvancedMarker>
     </Map>
   );
-};
-
-// One-shot geocoder. Re-runs only when the address string actually changes.
-const Geocode = ({
-  address,
-  onResolved,
-}: {
-  address: string;
-  onResolved: (l: LatLng) => void;
-}) => {
-  const geocodingLib = useMapsLibrary("geocoding");
-  const lastAddressRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!geocodingLib || lastAddressRef.current === address) return;
-    lastAddressRef.current = address;
-    const geocoder = new geocodingLib.Geocoder();
-    geocoder
-      .geocode({ address, region: "VN" })
-      .then((resp) => {
-        const result = resp.results[0];
-        if (!result) return;
-        const loc = result.geometry.location;
-        onResolved({ lat: loc.lat(), lng: loc.lng() });
-      })
-      .catch((err) => {
-        // Fail soft — the page already has fallback coords seeded.
-        console.warn("[FutaRada] geocoding failed:", address, err);
-      });
-  }, [geocodingLib, address, onResolved]);
-
-  return null;
 };
 
 // Camera autofit: includes both pins with comfortable padding.
@@ -755,63 +723,6 @@ const PickupPickerSheet = ({
 // ──────────────────────────────────────────────────────────────────────────
 // Small UI primitives.
 // ──────────────────────────────────────────────────────────────────────────
-
-const CompactRadar = ({ progress, arrived }: { progress: number; arrived: boolean }) => {
-  // The shuttle dot starts at the radar edge and converges to the center.
-  const radius = 80;
-  const remaining = Math.max(0, 1 - progress);
-  const angle = -Math.PI / 4;
-  const x = Math.cos(angle) * radius * remaining;
-  const y = Math.sin(angle) * radius * remaining;
-
-  return (
-    <div className="bg-gradient-to-br from-slate-900 to-emerald-900 rounded-2xl px-4 py-4 text-white relative overflow-hidden shadow-sm">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-emerald-400">📡</span>
-        <div className="font-semibold">FUTA Rada</div>
-        <div className="ml-auto text-[10px] opacity-70 uppercase tracking-wide">
-          {arrived ? "Đã đến" : "Đang theo dõi"}
-        </div>
-      </div>
-
-      <div className="relative w-[180px] h-[180px] mx-auto my-2">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="absolute rounded-full border border-emerald-500/40"
-            style={{
-              width: i * 60,
-              height: i * 60,
-              left: `calc(50% - ${i * 30}px)`,
-              top: `calc(50% - ${i * 30}px)`,
-            }}
-          />
-        ))}
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent 0deg, rgba(16,185,129,0.35) 60deg, transparent 90deg)",
-            animation: "spin 3s linear infinite",
-          }}
-        />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
-        </div>
-        {!arrived && (
-          <div
-            className="absolute left-1/2 top-1/2 transition-transform duration-1000"
-            style={{ transform: `translate(${x - 10}px, ${y - 10}px)` }}
-          >
-            <div className="w-5 h-5 rounded-full bg-orange-500 grid place-items-center border-2 border-white text-[9px]">
-              🚐
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const Stat = ({
   label,
