@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trips } from "@/data/trips";
+import { ALL_REVIEWS } from "@/data/reviews";
+import { useReviewAnalytics } from "@/hooks/useReviewAnalytics";
 
 const mockStaffData = trips.map(trip => trip.driver);
 
@@ -16,6 +18,10 @@ const monthlyTrendData = [
 export const CrewScoreDashboard = () => {
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<"week" | "month" | "quarter">("month");
+  const [analyticsTab, setAnalyticsTab] = useState<"sentiment" | "keywords" | "topics">("sentiment");
+
+  // All reviews across every driver — analytics recompute whenever this changes.
+  const nlp = useReviewAnalytics(ALL_REVIEWS);
 
   const excellentStaff = mockStaffData.filter((s) => s.status === "excellent");
   const needsAttention = mockStaffData.filter((s) => s.crewScore < 4.5);
@@ -242,6 +248,271 @@ export const CrewScoreDashboard = () => {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* ── NLP Analytics Section ──────────────────────────────────────── */}
+        <div className="space-y-6">
+          {/* Section header + tab switcher */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Phân tích Cảm xúc Khách hàng</h2>
+              <p className="text-sm text-slate-500">
+                Mô phỏng pipeline NLP ViSoBERT + BERTopic • {nlp.total.toLocaleString()} đánh giá
+              </p>
+            </div>
+            <div className="inline-flex items-center bg-slate-100 rounded-full p-0.5 text-sm font-semibold shrink-0">
+              {(["sentiment", "keywords", "topics"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setAnalyticsTab(tab)}
+                  className={`px-4 py-1.5 rounded-full transition ${analyticsTab === tab ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  {tab === "sentiment" ? "Sentiment" : tab === "keywords" ? "Từ khoá" : "Topic Model"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {analyticsTab === "sentiment" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Sentiment donut + bar */}
+              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Tỷ lệ Tích cực / Trung lập / Tiêu cực</h3>
+                    <p className="text-sm text-slate-500">Phân loại tự động bằng 5CD-AI/Vietnamese-Sentiment-visobert</p>
+                  </div>
+                  <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${nlp.healthColor === "green" ? "bg-green-50 text-green-700 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                    🏥 Sức khỏe: {nlp.healthLabel}
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  {/* SVG Donut */}
+                  <div className="relative shrink-0">
+                    <svg viewBox="0 0 160 160" className="w-40 h-40 -rotate-90">
+                      {(() => {
+                        const r = 60, cx = 80, cy = 80;
+                        const circ = 2 * Math.PI * r;
+                        const segments = [
+                          { pct: nlp.positivePct / 100, color: "#22c55e" },
+                          { pct: nlp.neutralPct / 100,  color: "#f59e0b" },
+                          { pct: nlp.negativePct / 100, color: "#ef4444" },
+                        ];
+                        let offset = 0;
+                        return segments.map((seg, i) => {
+                          const dash = seg.pct * circ;
+                          const gap  = circ - dash;
+                          const el = (
+                            <circle
+                              key={i}
+                              cx={cx} cy={cy} r={r}
+                              fill="none"
+                              stroke={seg.color}
+                              strokeWidth="28"
+                              strokeDasharray={`${dash} ${gap}`}
+                              strokeDashoffset={-offset * circ}
+                            />
+                          );
+                          offset += seg.pct;
+                          return el;
+                        });
+                      })()}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-extrabold text-slate-900">{nlp.positivePct.toFixed(0)}%</span>
+                      <span className="text-xs text-slate-500 font-medium">Tích cực</span>
+                    </div>
+                  </div>
+                  {/* Bar breakdown */}
+                  <div className="flex-1 w-full space-y-4">
+                    {[
+                      { label: "😊 Tích cực", count: nlp.positive, pct: nlp.positivePct, color: "bg-green-500" },
+                      { label: "😐 Trung lập", count: nlp.neutral,  pct: nlp.neutralPct,  color: "bg-amber-400" },
+                      { label: "😠 Tiêu cực", count: nlp.negative, pct: nlp.negativePct, color: "bg-red-500" },
+                    ].map((row) => (
+                      <div key={row.label}>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-sm font-semibold text-slate-700">{row.label}</span>
+                          <span className="text-sm font-bold text-slate-900">{row.count.toLocaleString()} <span className="text-slate-400 font-normal">({row.pct.toFixed(1)}%)</span></span>
+                        </div>
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className={`h-full ${row.color} rounded-full transition-all duration-500`} style={{ width: `${row.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                    <div className={`mt-4 p-3 rounded-xl text-sm font-medium border ${nlp.healthColor === "green" ? "bg-green-50 text-green-800 border-green-200" : nlp.healthColor === "yellow" ? "bg-yellow-50 text-yellow-800 border-yellow-200" : "bg-red-50 text-red-800 border-red-200"}`}>
+                      {nlp.healthColor === "green" && "🟢 TỐT — Khách hàng phản hồi rất tích cực!"}
+                      {nlp.healthColor === "yellow" && "🟡 TRUNG BÌNH — Cần cải thiện một số điểm."}
+                      {nlp.healthColor === "red" && "🔴 YẾU — Cần xem xét lại chất lượng dịch vụ!"}
+                      <span className="ml-2 font-bold">Điểm sức khỏe: {nlp.healthScore.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly sentiment stacked bars */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1">Xu hướng Sentiment theo tháng</h3>
+                <p className="text-xs text-slate-500 mb-5">6 tháng gần nhất</p>
+                <div className="flex items-end justify-between gap-2 h-48">
+                  {nlp.monthlyBreakdown.map((m) => {
+                    const total = m.positive + m.neutral + m.negative || 1;
+                    const posH = (m.positive / total) * 100;
+                    const neuH = (m.neutral  / total) * 100;
+                    const negH = (m.negative / total) * 100;
+                    return (
+                      <div key={m.month} className="flex flex-col items-center flex-1 gap-1 h-full justify-end group">
+                        <div className="relative w-full flex flex-col justify-end overflow-hidden rounded-t-md" style={{ height: "85%" }}>
+                          <div className="w-full bg-red-400"    style={{ height: `${negH}%` }} title={`${m.negative} tiêu cực`} />
+                          <div className="w-full bg-amber-300"  style={{ height: `${neuH}%` }} title={`${m.neutral} trung lập`} />
+                          <div className="w-full bg-green-400"  style={{ height: `${posH}%` }} title={`${m.positive} tích cực`} />
+                        </div>
+                        <span className="text-xs text-slate-500 font-medium">{m.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-400 inline-block" /> Tích cực</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-300 inline-block" /> Trung lập</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-400   inline-block" /> Tiêu cực</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {analyticsTab === "keywords" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Positive keywords */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <span className="text-green-500">😊</span> Từ khóa Tích cực (độc quyền)
+                </h3>
+                <p className="text-xs text-slate-500 mb-5">Từ xuất hiện chỉ trong review tích cực</p>
+                <div className="space-y-3">
+                  {nlp.topPosKeywords.map((kw, i) => {
+                    const max = nlp.topPosKeywords[0]?.count || 1;
+                    return (
+                      <div key={kw.word} className="flex items-center gap-3">
+                        <span className="w-5 text-xs text-slate-400 text-right shrink-0">{i + 1}</span>
+                        <span className="text-sm font-semibold text-slate-800 w-28 shrink-0 truncate">{kw.word}</span>
+                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-green-400 rounded-full" style={{ width: `${(kw.count / max) * 100}%` }} />
+                        </div>
+                        <span className="text-sm font-bold text-green-700 w-8 text-right shrink-0">{kw.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Negative keywords */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <span className="text-red-500">😠</span> Từ khóa Tiêu cực (độc quyền)
+                </h3>
+                <p className="text-xs text-slate-500 mb-5">Từ xuất hiện chỉ trong review tiêu cực</p>
+                <div className="space-y-3">
+                  {nlp.topNegKeywords.map((kw, i) => {
+                    const max = nlp.topNegKeywords[0]?.count || 1;
+                    return (
+                      <div key={kw.word} className="flex items-center gap-3">
+                        <span className="w-5 text-xs text-slate-400 text-right shrink-0">{i + 1}</span>
+                        <span className="text-sm font-semibold text-slate-800 w-28 shrink-0 truncate">{kw.word}</span>
+                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-red-400 rounded-full" style={{ width: `${(kw.count / max) * 100}%` }} />
+                        </div>
+                        <span className="text-sm font-bold text-red-700 w-8 text-right shrink-0">{kw.count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Tag cloud (word-cloud simulation) */}
+              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1">Tag Cloud — Pain Points</h3>
+                <p className="text-xs text-slate-500 mb-5">Kích thước tag tỷ lệ thuận với tần suất xuất hiện</p>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {nlp.tagFrequency.map((t) => {
+                    const max = nlp.tagFrequency[0]?.count || 1;
+                    const scale = 0.6 + (t.count / max) * 1.4;
+                    const isPos = ["Lái xe an toàn","Đúng giờ","Nhiệt tình","Thân thiện","Xe sạch sẽ","Chu đáo","Chuyên nghiệp","Hỗ trợ hành lý","Điều hòa tốt"].includes(t.tag);
+                    return (
+                      <span
+                        key={t.tag}
+                        title={`${t.count} lần`}
+                        className={`px-3 py-1.5 rounded-full font-semibold border cursor-default select-none transition-transform hover:scale-105 ${isPos ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}
+                        style={{ fontSize: `${Math.round(11 * scale)}px` }}
+                      >
+                        {t.tag}
+                        <span className="ml-1 opacity-60 text-[10px]">×{t.count}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {analyticsTab === "topics" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Positive topics */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <span className="text-green-500">😊</span> Topics Tích cực
+                </h3>
+                <p className="text-xs text-slate-500 mb-5">BERTopic + Qwen3-Embedding-0.6B + HDBSCAN clustering</p>
+                <div className="space-y-4">
+                  {nlp.posTopics.map((t, i) => {
+                    const maxC = Math.max(...nlp.posTopics.map((x) => x.count), 1);
+                    return (
+                      <div key={t.id} className="border border-green-100 rounded-xl p-4 bg-green-50/40">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-slate-900">{t.label}</span>
+                          <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{t.count} reviews</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {t.keywords.map((kw) => (
+                            <span key={kw} className="text-xs bg-white border border-green-200 text-green-700 px-2 py-0.5 rounded-md">{kw}</span>
+                          ))}
+                        </div>
+                        <div className="h-1.5 bg-green-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-green-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Negative topics */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <span className="text-red-500">😠</span> Topics Tiêu cực
+                </h3>
+                <p className="text-xs text-slate-500 mb-5">Phân cụm với min_cluster_size=6, nr_topics=5</p>
+                <div className="space-y-4">
+                  {nlp.negTopics.map((t) => {
+                    const maxC = Math.max(...nlp.negTopics.map((x) => x.count), 1);
+                    return (
+                      <div key={t.id} className="border border-red-100 rounded-xl p-4 bg-red-50/40">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-slate-900">{t.label}</span>
+                          <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">{t.count} reviews</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {t.keywords.map((kw) => (
+                            <span key={kw} className="text-xs bg-white border border-red-200 text-red-700 px-2 py-0.5 rounded-md">{kw}</span>
+                          ))}
+                        </div>
+                        <div className="h-1.5 bg-red-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-red-400 rounded-full" style={{ width: `${maxC ? (t.count / maxC) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Staff Table Section */}
