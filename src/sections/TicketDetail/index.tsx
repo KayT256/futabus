@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { getWalletLabel } from "@/data/wallets";
+import { PageShell } from "@/components/PageShell";
 
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
@@ -43,24 +44,23 @@ export const TicketDetail = () => {
   });
 
   return (
-    <main className="w-full bg-[#f3f3f5] min-h-screen pb-16">
-      {/* Orange ticket header — distinctive look so the ticket "feels" like an artifact you'd save. */}
-      <div className="max-w-md mx-auto pt-4 px-4">
-        <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-t-2xl px-4 py-4 flex items-center gap-3 text-white">
-          <button
-            onClick={() => (fromMode === "journey" ? navigate("/trip-progress") : navigate("/"))}
-            className="w-8 h-8 grid place-items-center rounded-full hover:bg-white/20"
-            aria-label="Quay lại"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="font-semibold flex-1 text-center">Thông tin chi tiết vé</div>
-          <div className="w-8" />
+    <PageShell
+      title="Thông tin chi tiết vé"
+      backTo={fromMode === "journey" ? "/trip-progress" : "/"}
+      width="wide"
+    >
+      <div className="max-w-md mx-auto">
+        {/* Orange ticket strip stays as content (chrome is neutral via PageShell) so the
+            ticket still "feels" like an artifact the user wants to save. */}
+        <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-t-2xl px-5 py-4 flex items-center gap-3 text-white outline outline-8 outline-orange-800/10">
+          <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/30 grid place-items-center text-xl shrink-0">🎫</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] tracking-[0.3em] font-semibold text-white/90">FUTA TICKET</div>
+            <div className="font-bold truncate">{trip.route}</div>
+          </div>
         </div>
 
-        <div className="bg-white border border-gray-200 border-t-0 rounded-b-2xl">
+        <div className="bg-white border border-gray-200 border-t-0 rounded-b-2xl outline outline-8 outline-orange-800/10">
           {/* Customer info ─────────────────────────────────── */}
           <div className="p-5 border-b border-gray-200">
             <h3 className="font-bold mb-3 text-gray-900">Thông tin hành khách</h3>
@@ -129,7 +129,7 @@ export const TicketDetail = () => {
 
         {/* Bottom CTAs depend on the entry point ──────────────── */}
         {fromMode === "journey" ? (
-          <div className="mt-4 space-y-2">
+          <div className="mt-6 space-y-2">
             <div className="text-center text-xs text-gray-500">
               Đưa mã QR cho nhân viên để được kiểm tra &amp; lên xe
             </div>
@@ -144,7 +144,7 @@ export const TicketDetail = () => {
             </button>
           </div>
         ) : (
-          <div className="mt-4 space-y-2">
+          <div className="mt-6 space-y-2">
             <button
               onClick={() => navigate("/trip-progress")}
               className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-orange-600"
@@ -163,7 +163,7 @@ export const TicketDetail = () => {
           </div>
         )}
       </div>
-    </main>
+    </PageShell>
   );
 };
 

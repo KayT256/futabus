@@ -102,7 +102,7 @@ export const FutaRada = () => {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-12">
+    <main className="min-h-screen bg-[#f3f3f5] pb-12">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-xl mx-auto px-4 h-14 flex items-center">
           <button
