@@ -5,6 +5,15 @@ import { useJourney } from "@/contexts/JourneyContext";
 import { getTerminalByName } from "@/data/terminals";
 import { PageShell } from "@/components/PageShell";
 
+// Type declaration for model-viewer web component
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': any;
+    }
+  }
+}
+
 // "Tìm xe tại bến" — static wayfinding card.
 //
 // Originally we tried to animate a pedestrian marker walking from the entrance
@@ -20,6 +29,17 @@ import { PageShell } from "@/components/PageShell";
 export const TerminalMap = () => {
   const navigate = useNavigate();
   const { activeJourney, setFoundBusAtTerminal } = useJourney();
+
+  // Load model-viewer web component
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js';
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
 
   // Guard: if the user lands here without an active journey (refresh, shared URL)
   // we bounce them home with a toast rather than rendering an empty shell.
@@ -71,6 +91,68 @@ export const TerminalMap = () => {
             <Stat label="Cổng vào" value="P – Kinh Dương Vương" />
             <Stat label="Biển số" value={trip.licensePlate} />
             <Stat label="Vị trí xe" value={terminal.parkingSpot} accent />
+          </div>
+        </div>
+
+        {/* 3D Model Viewer - Fixed Ground Level View */}
+        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-zinc-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-semibold text-sm text-slate-900 truncate">Mô hình 3D bến xe - Di chuyển</div>
+              <div className="text-[11px] text-slate-500 truncate">
+                Xoay để xem từ các góc độ khác nhau
+              </div>
+            </div>
+            <div className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium shrink-0">
+              3D Fixed View
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="w-full aspect-video bg-slate-100 rounded-lg overflow-hidden">
+              <model-viewer
+                src="/futa-ben-xe-mien-tay-3d-station-2.glb"
+                alt="Mô hình 3D Bến xe Miền Tây - Di chuyển"
+                camera-controls
+                camera-orbit="0deg 85deg 10m"
+                camera-target="0m 0m 0m"
+                field-of-view="25deg"
+                min-camera-orbit="auto 85deg 10m"
+                max-camera-orbit="auto 85deg 10m"
+                interaction-prompt="none"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 3D Model Viewer - Interactive Walkaround */}
+        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-zinc-200 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-semibold text-sm text-slate-900 truncate">Mô hình 3D bến xe - Toàn cảnh</div>
+              <div className="text-[11px] text-slate-500 truncate">
+                Xem tổng quan bến xe từ góc độ mặt đất
+              </div>
+            </div>
+            <div className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium shrink-0">
+              3D Interactive
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="w-full aspect-video bg-slate-100 rounded-lg overflow-hidden">
+              <model-viewer
+                src="/futa-ben-xe-mien-tay-3d-station-2.glb"
+                alt="Mô hình 3D Bến xe Miền Tây - Toàn cảnh"
+                camera-controls
+                camera-orbit="0deg 85deg 10m"
+                camera-target="0m 0m 0m"
+                field-of-view="25deg"
+                interaction-prompt="none"
+                min-camera-orbit="auto auto 100m"
+                max-camera-orbit="auto auto 100m"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
           </div>
         </div>
 
