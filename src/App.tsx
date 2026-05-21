@@ -18,6 +18,9 @@ import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
 import { TripProgress } from "@/sections/TripProgress";
 import { MiniGamePage } from "@/sections/MiniGamePage";
+import { DailyQuizPage } from "@/sections/DailyQuizPage";
+import { RoulettePage } from "@/sections/RoulettePage";
+import { VouchersPage } from "@/sections/VouchersPage";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { JourneyProvider } from "@/contexts/JourneyContext";
 import { WalletProvider } from "@/contexts/WalletContext";
@@ -41,7 +44,10 @@ export const App = () => {
             <Route path="/quick-report" element={<QuickReport />} />
             <Route path="/smart-stop" element={<SmartStop />} />
             <Route path="/futapay" element={<FUTAPay />} />
+            <Route path="/vouchers" element={<VouchersPage />} />
             <Route path="/mini-games" element={<MiniGamePage />} />
+            <Route path="/mini-games/quiz" element={<DailyQuizPage />} />
+            <Route path="/mini-games/roulette" element={<RoulettePage />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />

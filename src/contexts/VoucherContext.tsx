@@ -2,28 +2,32 @@
 // Persists to localStorage like JourneyContext and WalletContext.
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from "react";
-import type { Voucher } from "@/data/vouchers";
+import type { WalletId } from "@/data/wallets";
 
 // Voucher types from different sources
-export type VoucherSource = "payment" | "daily_quiz" | "roulette" | "scratch_off";
+export type VoucherSource = "payment" | "daily_quiz" | "roulette";
 
 // Extended voucher interface with game-specific properties
-export interface GameVoucher extends Voucher {
+export interface GameVoucher {
   id: string;
+  code: string;
+  wallet?: WalletId;
+  saving: number;
+  label: string;
+  min?: number;
+  tag?: "Hot" | "Best" | "VIP" | "New";
   source: VoucherSource;
-  // For game vouchers: when it was earned
   earnedAt: string;
-  // For game vouchers: when it expires (optional)
   expiresAt?: string;
-  // For game vouchers: whether it's been used
   used: boolean;
-  // For game vouchers: which trip it was used on (if used)
   usedOnTripId?: string;
   // For game vouchers: game-specific metadata
   gameMetadata?: {
     quizScore?: number;
-    gameType?: "roulette" | "scratch_off";
+    gameType?: "roulette";
   };
+  // Discount type: "fixed" for direct amount, "percentage" for percentage-based discounts
+  discountType?: "fixed" | "percentage";
 }
 
 // Quiz question interface
@@ -43,9 +47,8 @@ export interface DailyQuizState {
   voucherEarned?: GameVoucher;
 }
 
-// Game availability state (for roulette/scratch-off)
+// Game availability state (for roulette)
 export interface GameAvailabilityState {
-  lastPlayedGameType: "roulette" | "scratch_off" | null;
   lastPlayedDate: string; // ISO date string
   tripsSinceLastPlay: number;
   voucherEarned?: GameVoucher;
@@ -75,8 +78,8 @@ interface VoucherContextValue {
   // Check if daily quiz is available today
   canPlayDailyQuiz: () => boolean;
   
-  // Check if roulette/scratch-off is available
-  canPlayGame: (gameType: "roulette" | "scratch_off") => boolean;
+  // Check if roulette is available
+  canPlayRoulette: () => boolean;
   
   // Record a trip completion (increments tripsSinceLastPlay)
   recordTripCompletion: () => void;
@@ -105,6 +108,7 @@ const initialPaymentVouchers: GameVoucher[] = [
     source: "payment",
     earnedAt: new Date().toISOString(),
     used: false,
+    discountType: "fixed",
   },
   {
     id: "pay-2",
@@ -115,6 +119,7 @@ const initialPaymentVouchers: GameVoucher[] = [
     source: "payment",
     earnedAt: new Date().toISOString(),
     used: false,
+    discountType: "percentage",
   },
   {
     id: "pay-3",
@@ -126,6 +131,7 @@ const initialPaymentVouchers: GameVoucher[] = [
     source: "payment",
     earnedAt: new Date().toISOString(),
     used: false,
+    discountType: "percentage",
   },
   {
     id: "pay-4",
@@ -136,6 +142,7 @@ const initialPaymentVouchers: GameVoucher[] = [
     source: "payment",
     earnedAt: new Date().toISOString(),
     used: false,
+    discountType: "fixed",
   },
   {
     id: "pay-5",
@@ -147,17 +154,7 @@ const initialPaymentVouchers: GameVoucher[] = [
     source: "payment",
     earnedAt: new Date().toISOString(),
     used: false,
-  },
-  {
-    id: "pay-6",
-    code: "FUTAGOLD",
-    wallet: "futapay",
-    saving: 72500,
-    label: "Giảm 25% chuyến đêm — FUTA Gold",
-    tag: "VIP",
-    source: "payment",
-    earnedAt: new Date().toISOString(),
-    used: false,
+    discountType: "percentage",
   },
 ];
 
@@ -171,7 +168,6 @@ const loadFromStorage = (): PersistedShape => {
         completed: false,
       },
       gameAvailabilityState: {
-        lastPlayedGameType: null,
         lastPlayedDate: "",
         tripsSinceLastPlay: 0,
       },
@@ -188,7 +184,6 @@ const loadFromStorage = (): PersistedShape => {
           completed: false,
         },
         gameAvailabilityState: {
-          lastPlayedGameType: null,
           lastPlayedDate: "",
           tripsSinceLastPlay: 0,
         },
@@ -204,7 +199,6 @@ const loadFromStorage = (): PersistedShape => {
           completed: false,
         },
         gameAvailabilityState: {
-          lastPlayedGameType: null,
           lastPlayedDate: "",
           tripsSinceLastPlay: 0,
         },
@@ -220,7 +214,6 @@ const loadFromStorage = (): PersistedShape => {
         completed: false,
       },
       gameAvailabilityState: {
-        lastPlayedGameType: null,
         lastPlayedDate: "",
         tripsSinceLastPlay: 0,
       },
@@ -278,11 +271,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
     return dailyQuizState.lastPlayedDate !== today;
   }, [dailyQuizState]);
 
-  const canPlayGame = useCallback<VoucherContextValue["canPlayGame"]>((gameType: "roulette" | "scratch_off") => {
-    // Cannot play same game type twice in a row
-    if (gameAvailabilityState.lastPlayedGameType === gameType) {
-      return false;
-    }
+  const canPlayRoulette = useCallback<VoucherContextValue["canPlayRoulette"]>(() => {
     // Must have completed at least 1 trip since last play
     return gameAvailabilityState.tripsSinceLastPlay >= 1;
   }, [gameAvailabilityState]);
@@ -305,7 +294,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       gameAvailabilityState,
       setGameAvailabilityState,
       canPlayDailyQuiz,
-      canPlayGame,
+      canPlayRoulette,
       recordTripCompletion,
     }),
     [
@@ -316,7 +305,7 @@ export const VoucherProvider = ({ children }: { children: ReactNode }) => {
       dailyQuizState,
       gameAvailabilityState,
       canPlayDailyQuiz,
-      canPlayGame,
+      canPlayRoulette,
       recordTripCompletion,
     ]
   );

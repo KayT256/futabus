@@ -1,11 +1,10 @@
 import { PageShell } from "@/components/PageShell";
-import { DailyQuiz } from "@/components/DailyQuiz";
-import { RouletteGame } from "@/components/RouletteGame";
-import { ScratchOffGame } from "@/components/ScratchOffGame";
 import { useVouchers } from "@/contexts/VoucherContext";
+import { useNavigate } from "react-router-dom";
 
 export const MiniGamePage = () => {
   const { vouchers } = useVouchers();
+  const navigate = useNavigate();
 
   const gameVouchers = vouchers.filter((v) => v.source !== "payment" && !v.used);
 
@@ -35,7 +34,7 @@ export const MiniGamePage = () => {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                        {voucher.source === "daily_quiz" ? "Quiz" : voucher.source === "roulette" ? "Roulette" : "Vé cào"}
+                        {voucher.source === "daily_quiz" ? "Quiz" : "Roulette"}
                       </span>
                       <span className="text-xs text-purple-500">
                         {new Date(voucher.earnedAt).toLocaleDateString("vi-VN")}
@@ -57,21 +56,36 @@ export const MiniGamePage = () => {
           </div>
         )}
 
-        {/* Games Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Daily Quiz - Full width on mobile, half on desktop */}
-          <div className="lg:col-span-2">
-            <DailyQuiz />
+        {/* Games Grid - Dashboard style */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Daily Quiz Card */}
+          <div
+            onClick={() => navigate("/mini-games/quiz")}
+            className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="text-4xl mb-3">📚</div>
+            <h3 className="font-bold text-lg mb-2">Quiz Hàng Ngày</h3>
+            <p className="text-sm text-blue-100 mb-3">
+              Trả lời câu hỏi về du lịch Việt Nam để nhận voucher giảm giá.
+            </p>
+            <div className="text-xs bg-white/20 px-3 py-1 rounded-full inline-block">
+              1 lần/ngày
+            </div>
           </div>
 
-          {/* Roulette */}
-          <div>
-            <RouletteGame />
-          </div>
-
-          {/* Scratch-off */}
-          <div>
-            <ScratchOffGame />
+          {/* Roulette Card */}
+          <div
+            onClick={() => navigate("/mini-games/roulette")}
+            className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow"
+          >
+            <div className="text-4xl mb-3">🎰</div>
+            <h3 className="font-bold text-lg mb-2">Vòng Quay May Mắn</h3>
+            <p className="text-sm text-amber-100 mb-3">
+              Quay vòng quay để nhận voucher ngẫu nhiên sau mỗi chuyến đi.
+            </p>
+            <div className="text-xs bg-white/20 px-3 py-1 rounded-full inline-block">
+              Sau mỗi chuyến
+            </div>
           </div>
         </div>
 
@@ -97,17 +111,6 @@ export const MiniGamePage = () => {
                 <h3 className="font-medium text-slate-900 text-sm">Vòng Quay May Mắn</h3>
                 <p className="text-xs text-slate-600">
                   Quay vòng quay để nhận voucher ngẫu nhiên. Có thể chơi sau mỗi lần hoàn thành chuyến đi.
-                  Không thể chơi cùng loại game liên tiếp.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="text-pink-600 font-bold">🎫</div>
-              <div>
-                <h3 className="font-medium text-slate-900 text-sm">Vé Cào May Mắn</h3>
-                <p className="text-xs text-slate-600">
-                  Cào vé để nhận voucher ngẫu nhiên. Có thể chơi sau mỗi lần hoàn thành chuyến đi.
-                  Không thể chơi cùng loại game liên tiếp.
                 </p>
               </div>
             </div>

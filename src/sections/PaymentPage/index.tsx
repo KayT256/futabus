@@ -6,11 +6,21 @@ import { wallets, getWalletLabel, type WalletId } from "@/data/wallets";
 import { vouchers, findBestVoucher, findVoucherByCode, type Voucher } from "@/data/vouchers";
 import { useJourney, type PickupInfo } from "@/contexts/JourneyContext";
 import { useWallet } from "@/contexts/WalletContext";
-import { useVouchers } from "@/contexts/VoucherContext";
+import { useVouchers, type GameVoucher } from "@/contexts/VoucherContext";
 import { TopUpSheet } from "@/components/TopUpSheet";
 
 // Format helper used across this screen.
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
+
+const formatSaving = (saving: number, label: string) => {
+  // Extract percentage from label if present (real-world: display what's advertised)
+  const percentMatch = label.match(/(\d+)%/);
+  if (percentMatch) {
+    return `${percentMatch[1]}%`;
+  }
+  // Otherwise show the VND amount
+  return formatVND(saving);
+};
 
 // Booking state arrives via router state from BookingPage.
 // Defined as a permissive type because router state is `unknown` at the type level —
@@ -34,7 +44,7 @@ export const PaymentPage = () => {
   const location = useLocation();
   const { startJourney } = useJourney();
   const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
-  const { recordTripCompletion, vouchers: gameVouchers } = useVouchers();
+  const { recordTripCompletion, vouchers: gameVouchers, useVoucher: useGameVoucher } = useVouchers();
 
   const state = (location.state ?? {}) as BookingState;
   const trip = trips.find((t) => t.id === state.tripId) ?? trips[0];
@@ -48,7 +58,7 @@ export const PaymentPage = () => {
     };
 
   const [method, setMethod] = useState<WalletId>("futapay");
-  const [voucher, setVoucher] = useState<Voucher | null>(null);
+  const [voucher, setVoucher] = useState<Voucher | GameVoucher | null>(null);
   const [manualCode, setManualCode] = useState("");
   const [showStore, setShowStore] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
@@ -63,10 +73,8 @@ export const PaymentPage = () => {
   // Switching wallets must invalidate any voucher attached to the old wallet —
   // otherwise the user could "stack" a MoMo voucher onto a ZaloPay payment.
   const switchWallet = (next: WalletId) => {
-    if (!wallets.find((w) => w.id === next)?.linked) {
-      toast.warning(`${getWalletLabel(next)} chưa liên kết`, { description: "Mở cổng liên kết... (demo)" });
-    }
-    if (voucher && voucher.wallet !== next) {
+    // If a voucher is applied and it's wallet-specific, remove it when switching
+    if (voucher && "wallet" in voucher && voucher.wallet && voucher.wallet !== next) {
       toast.warning("Đã gỡ voucher", {
         description: `Voucher ${voucher.code} chỉ dùng được với ${getWalletLabel(voucher.wallet)}.`,
       });
@@ -75,19 +83,19 @@ export const PaymentPage = () => {
     setMethod(next);
   };
 
-  const applyVoucher = (v: Voucher) => {
-    if (v.wallet !== method) {
+  const applyVoucher = (v: Voucher | GameVoucher) => {
+    if ("wallet" in v && v.wallet && v.wallet !== method) {
       toast.error("Voucher không tương thích", {
         description: `Mã này chỉ dùng được với ${getWalletLabel(v.wallet)}. Đổi phương thức để dùng.`,
       });
       return;
     }
-    if (v.min && subtotal < v.min) {
+    if ("min" in v && v.min && subtotal < v.min) {
       toast.error("Đơn chưa đủ điều kiện", { description: `Cần đơn từ ${formatVND(v.min)}.` });
       return;
     }
-    setVoucher(v);
-    toast.success(`Đã áp dụng ${v.code}`, { description: `Tiết kiệm ${formatVND(v.saving)}` });
+    setVoucher(v as Voucher);
+    toast.success(`Đã áp dụng ${v.code}`, { description: `Tiết kiệm ${formatSaving(v.saving, v.label)}` });
   };
 
   const submitManualCode = (e?: React.FormEvent) => {
@@ -103,18 +111,53 @@ export const PaymentPage = () => {
     setManualCode("");
   };
 
-  const saving = voucher?.saving ?? 0;
+  // Calculate actual saving amount (handle percentage discounts for multi-seat bookings)
+  const calculateSaving = (v: Voucher | GameVoucher | null, subtotalValue: number): number => {
+    if (!v) return 0;
+    
+    // Check discount type
+    const discountType = "discountType" in v ? v.discountType : undefined;
+    
+    // For percentage vouchers, calculate based on actual subtotal
+    if (discountType === "percentage") {
+      const percentMatch = v.label.match(/(\d+)%/);
+      if (percentMatch) {
+        const percentage = parseInt(percentMatch[1], 10);
+        const calculated = Math.round(subtotalValue * (percentage / 100));
+        
+        // Check for cap (e.g., "tối đa 50K")
+        const capMatch = v.label.match(/tối đa (\d+)K/);
+        if (capMatch) {
+          const cap = parseInt(capMatch[1], 10) * 1000;
+          return Math.min(calculated, cap);
+        }
+        
+        return calculated;
+      }
+    }
+    
+    // For fixed vouchers or percentage without explicit percentage in label, use pre-calculated saving
+    return v.saving;
+  };
+
+  const saving = calculateSaving(voucher, subtotal);
   const total = Math.max(0, subtotal - saving);
 
   // Shared finalize step — used by both the FUTAPay path (after balance is deducted)
   // and the non-FUTAPay path (gateway is mocked).
   const finalizePayment = () => {
+    // Mark game voucher as used if it's a game voucher
+    if (voucher && "id" in voucher) {
+      const gameVoucher = voucher as { id: string };
+      useGameVoucher(gameVoucher.id, trip.id);
+    }
+    
     startJourney({
       trip,
       seats,
       pickup,
       paymentMethod: method,
-      voucher,
+      voucher: voucher as Voucher | null,
       bookedAt: new Date().toISOString(),
       totalPaid: total,
     });
@@ -513,7 +556,7 @@ export const PaymentPage = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-sm">{isGameVoucher ? 'GAME' : v.code}</span>
+                          <span className="font-mono font-bold text-sm">{v.code}</span>
                           {v.tag && (
                             <span className="text-[9px] bg-orange-500 text-white px-1.5 py-0.5 rounded">
                               {v.tag}
@@ -521,16 +564,16 @@ export const PaymentPage = () => {
                           )}
                           {gameVoucher && gameVoucher.source && (
                             <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded">
-                              {gameVoucher.source === 'daily_quiz' ? 'Quiz' : gameVoucher.source === 'roulette' ? 'Roulette' : 'Vé cào'}
+                              {gameVoucher.source === 'daily_quiz' ? 'Quiz' : gameVoucher.source === 'roulette' ? 'Roulette' : 'Game'}
                             </span>
                           )}
                           {'wallet' in v && (
-                            <span className="text-[10px] text-gray-500">· {getWalletLabel(v.wallet)}</span>
+                            <span className="text-[10px] text-gray-500">· {v.wallet ? getWalletLabel(v.wallet) : 'Tất cả'}</span>
                           )}
                         </div>
                         <div className="text-xs text-gray-700">{v.label}</div>
                         <div className="text-[11px] font-semibold text-emerald-600 mt-0.5">
-                          Tiết kiệm {formatVND(v.saving)}
+                          Tiết kiệm {formatSaving(v.saving, v.label)}
                         </div>
                         {gameVoucher && gameVoucher.expiresAt && (
                           <div className="text-[10px] text-gray-500 mt-0.5">
@@ -551,7 +594,7 @@ export const PaymentPage = () => {
                       ) : (
                         <button
                           onClick={() => {
-                            if ('wallet' in v) {
+                            if ('wallet' in v && v.wallet) {
                               switchWallet(v.wallet);
                               toast.info(`Đã đổi ví sang ${getWalletLabel(v.wallet)}`);
                             }

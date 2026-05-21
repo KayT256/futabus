@@ -5,29 +5,34 @@
 
 import type { WalletId } from "./wallets";
 
+export type { WalletId } from "./wallets";
+
 export interface Voucher {
   code: string;
   wallet: WalletId;
   // Saving in VND that this voucher provides on a 290k bus ticket.
-  // Pre-computed because realistic % math (e.g. "20% off, capped at 60K") is fiddly in the UI.
+  // For fixed vouchers, this is the actual discount amount.
+  // For percentage vouchers, this is pre-calculated for reference but actual discount is calculated at runtime.
   saving: number;
   label: string;
   // Minimum order value (VND) — voucher only applies above this threshold.
   min?: number;
   // Optional badge ("Hot", "Best", "VIP") shown on voucher chips.
   tag?: "Hot" | "Best" | "VIP" | "New";
+  // Discount type: "fixed" for direct amount, "percentage" for percentage-based discounts
+  discountType?: "fixed" | "percentage";
 }
 
 export const vouchers: Voucher[] = [
-  { code: "MOMO50", wallet: "momo", saving: 50000, label: "Giảm 50K cho đơn từ 200K", min: 200000, tag: "Hot" },
-  { code: "MOMO15P", wallet: "momo", saving: 43500, label: "Giảm 15%, tối đa 50K" },
-  { code: "ZALO20", wallet: "zalopay", saving: 58000, label: "Giảm 20%, tối đa 60K", tag: "Best" },
-  { code: "ZALOFREESHIP", wallet: "zalopay", saving: 30000, label: "Hoàn 30K vé xe khách" },
-  { code: "SHOPEEPAY10", wallet: "shopeepay", saving: 29000, label: "Giảm 10% cho khách mới", tag: "New" },
-  { code: "FUTAGOLD", wallet: "futapay", saving: 72500, label: "Giảm 25% chuyến đêm — FUTA Gold", tag: "VIP" },
-  { code: "FUTAFAN", wallet: "futapay", saving: 35000, label: "Ưu đãi FUTA Member" },
-  { code: "VNPAY25K", wallet: "vnpay", saving: 25000, label: "Giảm 25K thanh toán VNPay QR" },
-  { code: "VISA10", wallet: "card", saving: 29000, label: "Giảm 10% thẻ Visa quốc tế" },
+  { code: "MOMO50", wallet: "momo", saving: 50000, label: "Giảm 50K cho đơn từ 200K", min: 200000, tag: "Hot", discountType: "fixed" },
+  { code: "MOMO15P", wallet: "momo", saving: 43500, label: "Giảm 15%, tối đa 50K", discountType: "percentage" },
+  { code: "ZALO20", wallet: "zalopay", saving: 58000, label: "Giảm 20%, tối đa 60K", tag: "Best", discountType: "percentage" },
+  { code: "ZALOFREESHIP", wallet: "zalopay", saving: 30000, label: "Hoàn 30K vé xe khách", discountType: "fixed" },
+  { code: "SHOPEEPAY10", wallet: "shopeepay", saving: 29000, label: "Giảm 10% cho khách mới", tag: "New", discountType: "percentage" },
+  { code: "FUTAGOLD", wallet: "futapay", saving: 72500, label: "Giảm 25% chuyến đêm — FUTA Gold", tag: "VIP", discountType: "percentage" },
+  { code: "FUTAFAN", wallet: "futapay", saving: 35000, label: "Ưu đãi FUTA Member", discountType: "fixed" },
+  { code: "VNPAY25K", wallet: "vnpay", saving: 25000, label: "Giảm 25K thanh toán VNPay QR", discountType: "fixed" },
+  { code: "VISA10", wallet: "card", saving: 29000, label: "Giảm 10% thẻ Visa quốc tế", discountType: "percentage" },
 ];
 
 export const findVoucherByCode = (code: string): Voucher | undefined =>

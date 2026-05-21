@@ -60,14 +60,15 @@ export const DailyQuiz = () => {
       }
 
       if (voucherDiscount > 0) {
-        const voucher = addVoucher({
+        addVoucher({
           code: `QUIZ${voucherDiscount}${Date.now()}`,
           wallet: "futapay",
-          saving: Math.round(290000 * (voucherDiscount / 100)), // Assuming 290k base price
+          saving: voucherDiscount,
           label: `Giảm ${voucherDiscount}% - Quiz hôm nay`,
           source: "daily_quiz",
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
           gameMetadata: { quizScore: score },
+          discountType: "percentage",
         });
 
         toast.success("Chúc mừng!", {
