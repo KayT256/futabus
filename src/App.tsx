@@ -17,14 +17,17 @@ import { CrewScoreDetail } from "@/sections/CrewScoreDetail";
 import { PostTripFeedback } from "@/sections/PostTripFeedback";
 import { CrewScoreDashboard } from "@/sections/CrewScoreDashboard";
 import { TripProgress } from "@/sections/TripProgress";
+import { MiniGamePage } from "@/sections/MiniGamePage";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { JourneyProvider } from "@/contexts/JourneyContext";
 import { WalletProvider } from "@/contexts/WalletContext";
+import { VoucherProvider } from "@/contexts/VoucherContext";
 
 export const App = () => {
   return (
     <AuthProvider>
       <WalletProvider>
+      <VoucherProvider>
       <JourneyProvider>
         <body className="text-neutral-900 text-sm not-italic tabular-nums font-normal accent-auto bg-white box-border caret-transparent block h-full tracking-[normal] leading-5 list-outside list-disc outline-[3px] pointer-events-auto text-start indent-[0px] normal-case visible w-full overflow-auto border-separate font-intertight md:text-base md:leading-6">
           <Routes>
@@ -38,6 +41,7 @@ export const App = () => {
             <Route path="/quick-report" element={<QuickReport />} />
             <Route path="/smart-stop" element={<SmartStop />} />
             <Route path="/futapay" element={<FUTAPay />} />
+            <Route path="/mini-games" element={<MiniGamePage />} />
             <Route path="/crew-score/:id" element={<CrewScoreDetail />} />
             <Route path="/post-trip-feedback" element={<PostTripFeedback />} />
             <Route path="/crew-score-dashboard" element={<CrewScoreDashboard />} />
@@ -50,6 +54,7 @@ export const App = () => {
           <Toaster position="top-center" richColors closeButton />
         </body>
       </JourneyProvider>
+      </VoucherProvider>
       </WalletProvider>
     </AuthProvider>
   );

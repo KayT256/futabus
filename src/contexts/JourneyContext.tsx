@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo, use
 import type { Trip } from "@/data/trips";
 import type { Voucher } from "@/data/vouchers";
 import type { WalletId } from "@/data/wallets";
+import { toast } from "sonner";
 
 // 9 phases mirror the prototype's user journey:
 // pre-departure (waiting_shuttle → at_terminal) → on-board (boarded → arrived).
@@ -252,7 +253,15 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const setPickupInfo = useCallback((info: PickupInfo) => {
+    setActiveJourney((prev) => (prev ? { ...prev, pickup: info } : prev));
+  }, []);
+
   const endJourney = useCallback(() => {
+    setActiveJourney(null);
+  }, []);
+
+  const completeJourney = useCallback(() => {
     setActiveJourney(null);
   }, []);
 
@@ -296,8 +305,13 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       stopAutoSimulation,
       setSimulationSpeed,
       endJourney,
+      completeJourney,
+      autoSimulation: activeJourney?.autoSimulation,
+      simulationSpeed: activeJourney?.simulationSpeed,
+      phaseStartedAt: activeJourney?.phaseStartedAt,
+      setPickupInfo,
     }),
-    [activeJourney, startJourney, setPhase, advancePhase, setCart, setPickedUp, setFoundBusAtTerminal, startAutoSimulation, stopAutoSimulation, setSimulationSpeed, endJourney],
+    [activeJourney, startJourney, setPhase, advancePhase, setCart, setPickedUp, setFoundBusAtTerminal, startAutoSimulation, stopAutoSimulation, setSimulationSpeed, endJourney, completeJourney, setPickupInfo],
   );
 
   return <JourneyContext.Provider value={value}>{children}</JourneyContext.Provider>;

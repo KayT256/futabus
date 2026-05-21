@@ -6,6 +6,7 @@ import { wallets, getWalletLabel, type WalletId } from "@/data/wallets";
 import { vouchers, findBestVoucher, findVoucherByCode, type Voucher } from "@/data/vouchers";
 import { useJourney, type PickupInfo } from "@/contexts/JourneyContext";
 import { useWallet } from "@/contexts/WalletContext";
+import { useVouchers } from "@/contexts/VoucherContext";
 import { TopUpSheet } from "@/components/TopUpSheet";
 
 // Format helper used across this screen.
@@ -33,6 +34,7 @@ export const PaymentPage = () => {
   const location = useLocation();
   const { startJourney } = useJourney();
   const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
+  const { recordTripCompletion, vouchers: gameVouchers } = useVouchers();
 
   const state = (location.state ?? {}) as BookingState;
   const trip = trips.find((t) => t.id === state.tripId) ?? trips[0];
@@ -116,6 +118,8 @@ export const PaymentPage = () => {
       bookedAt: new Date().toISOString(),
       totalPaid: total,
     });
+    // Record trip completion for mini-game eligibility
+    recordTripCompletion();
     toast.success("Thanh toán thành công!", { description: `Mã vé: FUTA${trip.id}` });
     navigate("/ticket", { replace: true, state: { from: "payment" } });
   };
@@ -479,18 +483,23 @@ export const PaymentPage = () => {
               </button>
             </div>
             <div className="overflow-y-auto p-4 space-y-2">
-              {[...vouchers]
+              {/* Combine static vouchers with earned game vouchers */}
+              {[...vouchers, ...gameVouchers.filter(v => !v.used)]
                 .sort((a, b) => {
-                  const aOk = a.wallet === method ? 1 : 0;
-                  const bOk = b.wallet === method ? 1 : 0;
+                  // Game vouchers don't have wallet compatibility, so they're always compatible
+                  const aOk = !('wallet' in a) || a.wallet === method ? 1 : 0;
+                  const bOk = !('wallet' in b) || b.wallet === method ? 1 : 0;
                   if (aOk !== bOk) return bOk - aOk;
                   return b.saving - a.saving;
                 })
                 .map((v) => {
-                  const compatible = v.wallet === method;
+                  const compatible = !('wallet' in v) || v.wallet === method;
+                  const isGameVoucher = 'id' in v;
+                  const voucherKey = isGameVoucher ? (v as any).id : v.code;
+                  const gameVoucher = isGameVoucher ? v as any : null;
                   return (
                     <div
-                      key={v.code}
+                      key={String(voucherKey)}
                       className={`rounded-xl border p-3 flex items-center gap-3 ${
                         compatible ? "border-orange-200 bg-orange-50" : "border-gray-200 bg-gray-50 opacity-80"
                       }`}
@@ -504,18 +513,30 @@ export const PaymentPage = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-sm">{v.code}</span>
+                          <span className="font-mono font-bold text-sm">{isGameVoucher ? 'GAME' : v.code}</span>
                           {v.tag && (
                             <span className="text-[9px] bg-orange-500 text-white px-1.5 py-0.5 rounded">
                               {v.tag}
                             </span>
                           )}
-                          <span className="text-[10px] text-gray-500">· {getWalletLabel(v.wallet)}</span>
+                          {gameVoucher && gameVoucher.source && (
+                            <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded">
+                              {gameVoucher.source === 'daily_quiz' ? 'Quiz' : gameVoucher.source === 'roulette' ? 'Roulette' : 'Vé cào'}
+                            </span>
+                          )}
+                          {'wallet' in v && (
+                            <span className="text-[10px] text-gray-500">· {getWalletLabel(v.wallet)}</span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-700">{v.label}</div>
                         <div className="text-[11px] font-semibold text-emerald-600 mt-0.5">
                           Tiết kiệm {formatVND(v.saving)}
                         </div>
+                        {gameVoucher && gameVoucher.expiresAt && (
+                          <div className="text-[10px] text-gray-500 mt-0.5">
+                            Hết hạn: {new Date(gameVoucher.expiresAt).toLocaleDateString('vi-VN')}
+                          </div>
+                        )}
                       </div>
                       {compatible ? (
                         <button
@@ -530,8 +551,10 @@ export const PaymentPage = () => {
                       ) : (
                         <button
                           onClick={() => {
-                            switchWallet(v.wallet);
-                            toast.info(`Đã đổi ví sang ${getWalletLabel(v.wallet)}`);
+                            if ('wallet' in v) {
+                              switchWallet(v.wallet);
+                              toast.info(`Đã đổi ví sang ${getWalletLabel(v.wallet)}`);
+                            }
                           }}
                           className="px-3 py-1.5 rounded-full border border-blue-500 text-blue-600 text-xs font-semibold hover:bg-blue-50"
                         >
