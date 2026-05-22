@@ -37,7 +37,6 @@
   ],
   "exclude": [
     "node_modules",
-    "levis-demo",
     "server",
     ".next",
     "dist"

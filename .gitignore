@@ -28,9 +28,6 @@ dist-ssr
 MOCK.md
 CONTEXT.md
 
-# External reference repos
-levis-demo/
-
 # Local env files — never commit secrets like API keys
 .env
 .env.local
