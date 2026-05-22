@@ -90,7 +90,7 @@ export const DesktopHeader = () => {
       </div>
       <div className="box-border caret-transparent leading-5 min-h-0 min-w-0 outline-[3px] z-10 mx-20 md:leading-6 md:min-h-[auto] md:min-w-[auto]">
         <a
-          href="https://futabus.vn/"
+          href="/"
           className="box-border caret-transparent leading-5 outline-[3px] md:leading-6 hover:text-orange-400 hover:outline-0"
         >
           <img

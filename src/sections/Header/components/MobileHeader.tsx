@@ -65,7 +65,7 @@ export const MobileHeader = () => {
             </div>
           </div>
           <a
-            href="https://futabus.vn/"
+            href="/"
             className="box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:leading-6 md:min-h-0 md:min-w-0 hover:text-orange-400 hover:outline-0"
           >
             <img
@@ -136,7 +136,7 @@ export const MobileHeader = () => {
         <div className="fixed bg-white box-border caret-transparent h-full left-[-60%] leading-5 outline-[3px] w-3/5 z-50 overflow-auto p-2 top-0 md:leading-6">
           <div className="box-border caret-transparent leading-5 outline-[3px] w-full mb-4 md:leading-6">
             <a
-              href="https://futabus.vn/"
+              href="/"
               className="box-border caret-transparent block leading-5 outline-[3px] pl-1 md:leading-6 hover:text-orange-400 hover:outline-0"
             ></a>
           </div>
@@ -152,7 +152,7 @@ export const MobileHeader = () => {
             <ul className="box-border caret-transparent leading-5 list-none outline-[3px] pl-0 md:leading-6">
               <li className="text-orange-600 text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/"
+                  href="/"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Trang chủ
@@ -160,7 +160,7 @@ export const MobileHeader = () => {
               </li>
               <li className="text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/lich-trinh"
+                  href="/search"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Lịch trình
@@ -168,7 +168,7 @@ export const MobileHeader = () => {
               </li>
               <li className="text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/tra-cuu-ve"
+                  href="/ticket"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Tra cứu vé
@@ -176,7 +176,7 @@ export const MobileHeader = () => {
               </li>
               <li className="text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/tin-tuc"
+                  href="/"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Tin tức
@@ -192,7 +192,7 @@ export const MobileHeader = () => {
               </li>
               <li className="text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/lien-he"
+                  href="/"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Liên hệ
@@ -200,7 +200,7 @@ export const MobileHeader = () => {
               </li>
               <li className="text-xs box-border caret-transparent leading-4 outline-[3px] border-slate-200 px-2 py-3 border-t border-solid">
                 <a
-                  href="https://futabus.vn/ve-chung-toi"
+                  href="/"
                   className="box-border caret-transparent outline-[3px] hover:text-orange-400 hover:outline-0"
                 >
                   Về chúng tôi
