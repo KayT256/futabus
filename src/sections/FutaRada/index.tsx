@@ -25,6 +25,13 @@ import {
   type PathProfile,
 } from "@/lib/mapsHelpers";
 
+// Client-only wrapper to prevent hydration mismatch with Google Maps
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? <>{children}</> : <div className="h-[400px] bg-slate-100 rounded-2xl animate-pulse" />;
+};
+
 // FUTA Rada — track the FUTA shuttle bus heading to pick the user up.
 //
 // Architecture (rewritten 2026-05):
@@ -122,18 +129,24 @@ const SUGGESTED_PICKUPS: PickupLocation[] = [
 export const FutaRada = () => {
   const router = useRouter();
   const { activeJourney, setPhase } = useJourney();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!activeJourney) router.replace("/");
   }, [activeJourney, router]);
-
-  if (!activeJourney) return null;
 
   const handleArrived = () => {
     setPhase("shuttle_onboard");
     toast.success("Đã lên xe trung chuyển");
     router.push("/trip-progress");
   };
+
+  if (!mounted) return null;
+  if (!activeJourney) return null;
 
   if (!API_KEY) {
     return (
