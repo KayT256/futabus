@@ -90,37 +90,13 @@ const SHUTTLE_OFFICE = {
   fallbackCoord: { lat: 10.86879, lng: 106.66437 },
 };
 
-// Default rider pickup — UEH Campus B per the user's spec.
+// Default rider pickup — Tam Anh Hospital - HCMC (fixed location, non-editable)
 const DEFAULT_PICKUP: PickupLocation = {
-  address: "279 Nguyễn Tri Phương, Phường 5, Quận 10, Hồ Chí Minh, Vietnam",
-  shortLabel: "UEH Campus B",
-  description: "279 Nguyễn Tri Phương, Phường 5, Quận 10",
-  fallbackCoord: { lat: 10.7596, lng: 106.6627 },
+  address: "2B Đ. Phổ Quang, Tân Sơn Hòa, Hồ Chí Minh 700000, Vietnam",
+  shortLabel: "Tam Anh Hospital - HCMC",
+  description: "2B Đ. Phổ Quang, Tân Sơn Hòa, Hồ Chí Minh",
+  fallbackCoord: { lat: 10.802485, lng: 106.6660436 },
 };
-
-// Curated suggestions in the picker. Mirrors the booking flow's "Tìm kiếm
-// gần đây" pattern — the rider can pick a familiar landmark without typing.
-const SUGGESTED_PICKUPS: PickupLocation[] = [
-  DEFAULT_PICKUP,
-  {
-    address: "72 Lê Thánh Tôn, Bến Nghé, Quận 1, Hồ Chí Minh, Vietnam",
-    shortLabel: "Vincom Đồng Khởi",
-    description: "72 Lê Thánh Tôn, Q.1",
-    fallbackCoord: { lat: 10.77758, lng: 106.7012 },
-  },
-  {
-    address: "Sân bay Tân Sơn Nhất, Trường Sơn, Tân Bình, Hồ Chí Minh, Vietnam",
-    shortLabel: "Sân bay Tân Sơn Nhất",
-    description: "Ga đến quốc nội, Tân Bình",
-    fallbackCoord: { lat: 10.81883, lng: 106.65186 },
-  },
-  {
-    address: "101 Tôn Dật Tiên, Tân Phú, Quận 7, Hồ Chí Minh, Vietnam",
-    shortLabel: "Crescent Mall",
-    description: "Q.7 — Phú Mỹ Hưng",
-    fallbackCoord: { lat: 10.72917, lng: 106.7186 },
-  },
-];
 
 // ──────────────────────────────────────────────────────────────────────────
 // Top-level page shell — handles env-key fallback + APIProvider boundary.
@@ -185,14 +161,8 @@ export const FutaRada = () => {
 // ──────────────────────────────────────────────────────────────────────────
 
 const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
-  const [pickup, setPickup] = useState<PickupLocation>(DEFAULT_PICKUP);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  // The shuttle dispatch office is a hardcoded location that never moves
-  // (it's a real depot), so we use a stable reference rather than state.
-  // The pickup is state because the rider can change it via the picker;
-  // any new coordinates come from Places Autocomplete with verified lat/lng,
-  // so no separate geocoding pass is needed.
+  // Fixed pickup location - user cannot change it
+  const pickup = DEFAULT_PICKUP;
   const originLoc: LatLng = SHUTTLE_OFFICE.fallbackCoord;
   const [pickupLoc, setPickupLoc] = useState<LatLng>(DEFAULT_PICKUP.fallbackCoord);
   const [pathProfile, setPathProfile] = useState<PathProfile | null>(null);
@@ -250,22 +220,11 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
     }
   }, [arrived, arrivedToastShown]);
 
-  const handlePickupChange = (next: PickupLocation) => {
-    setPickup(next);
-    setPickerOpen(false);
-    // Reset everything that depends on the pickup point so the new route
-    // animates fresh from the office instead of resuming mid-way.
-    setPickupLoc(next.fallbackCoord);
-    setPathProfile(null);
-    setProgress(0);
-    setArrivedToastShown(false);
-  };
-
   return (
     <>
       {/* Pickup info card — visual style mirrors the booking page's
           "Thông tin đón trả" so the rider sees familiar chrome. */}
-      <PickupInfoCard pickup={pickup} onEdit={() => setPickerOpen(true)} />
+      <PickupInfoCard pickup={pickup} />
 
       {/* The live satellite map IS the FUTA Rada now — the old animated radar
           circle was a mockup that lived next to the map. Now we own the radar
@@ -332,14 +291,6 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
       <button onClick={onArrived} className="w-full text-xs text-slate-500 underline">
         [Demo] Bỏ qua &amp; lên xe ngay
       </button>
-
-      {pickerOpen && (
-        <PickupPickerSheet
-          current={pickup}
-          onPick={handlePickupChange}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
     </>
   );
 };
@@ -350,10 +301,8 @@ const RadaExperience = ({ onArrived }: { onArrived: () => void }) => {
 
 const PickupInfoCard = ({
   pickup,
-  onEdit,
 }: {
   pickup: PickupLocation;
-  onEdit: () => void;
 }) => {
   // The shuttle phase always implies "Trung chuyển" pickup — riders going
   // direct to the bến never end up on FUTA Rada. Both radio buttons are
@@ -380,9 +329,6 @@ const PickupInfoCard = ({
             <path d="M12 16v-4M12 8h.01" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </div>
-        <button onClick={onEdit} className="text-orange-500 text-sm font-medium hover:text-orange-600">
-          Đổi điểm đón
-        </button>
       </div>
 
       <div className="px-4 py-3 space-y-3">
@@ -398,17 +344,11 @@ const PickupInfoCard = ({
             <span className="text-xs text-emerald-600 font-medium ml-auto">Hợp lệ</span>
           </div>
 
-          {/* Address — looks like the read-only text field from the screenshot. */}
-          <button
-            onClick={onEdit}
-            className="w-full text-left border border-zinc-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 hover:border-orange-400 transition flex items-center gap-2"
-          >
+          {/* Address — read-only textbox (non-editable) */}
+          <div className="w-full border border-zinc-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 bg-slate-50 flex items-center gap-2">
             <span className="text-orange-500 shrink-0">📍</span>
             <span className="truncate flex-1">{pickup.description}</span>
-            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          </div>
 
           <div className="mt-2 text-[12px] text-slate-600 space-y-0.5">
             <div>
@@ -575,164 +515,6 @@ const DrivingDirections = ({
   }, [routesLib, origin, dest, onPathReady]);
 
   return null;
-};
-
-// ──────────────────────────────────────────────────────────────────────────
-// Pickup picker sheet — bottom-sheet modal with suggestions + Places search.
-// ──────────────────────────────────────────────────────────────────────────
-
-const PickupPickerSheet = ({
-  current,
-  onPick,
-  onClose,
-}: {
-  current: PickupLocation;
-  onPick: (p: PickupLocation) => void;
-  onClose: () => void;
-}) => {
-  const placesLib = useMapsLibrary("places");
-  const [query, setQuery] = useState("");
-  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
-  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
-
-  // Fresh session token per sheet open — Google bills autocomplete in
-  // sessions of 1 search → 1 details lookup.
-  useEffect(() => {
-    if (!placesLib) return;
-    sessionTokenRef.current = new placesLib.AutocompleteSessionToken();
-  }, [placesLib]);
-
-  // Debounced predictions; skip queries shorter than 2 chars.
-  useEffect(() => {
-    if (!placesLib || query.trim().length < 2) {
-      setPredictions([]);
-      return;
-    }
-    const handle = setTimeout(() => {
-      const service = new placesLib.AutocompleteService();
-      service.getPlacePredictions(
-        {
-          input: query,
-          sessionToken: sessionTokenRef.current ?? undefined,
-          componentRestrictions: { country: "vn" },
-          language: "vi",
-        },
-        (results) => {
-          setPredictions(results ?? []);
-        },
-      );
-    }, 250);
-    return () => clearTimeout(handle);
-  }, [placesLib, query]);
-
-  // When the user picks a Places result, geocode it to coords. We use the
-  // Geocoder here (not Place Details) because we only need lat/lng — saves
-  // a billed API call.
-  const handlePredictionPick = async (pred: google.maps.places.AutocompletePrediction) => {
-    if (!placesLib) return;
-    const geocoder = new google.maps.Geocoder();
-    try {
-      const resp = await geocoder.geocode({ placeId: pred.place_id });
-      const result = resp.results[0];
-      if (!result) return;
-      const loc = result.geometry.location;
-      onPick({
-        address: pred.description,
-        shortLabel: pred.structured_formatting.main_text,
-        description: pred.structured_formatting.secondary_text ?? pred.description,
-        fallbackCoord: { lat: loc.lat(), lng: loc.lng() },
-      });
-    } catch (err) {
-      console.warn("[FutaRada] place-id geocode failed:", err);
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-xl max-h-[85vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-5 pt-4 pb-3 border-b border-zinc-200">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-slate-900">Chọn điểm đón</h3>
-            <button onClick={onClose} className="text-slate-500 hover:text-slate-900 text-xl leading-none">
-              ×
-            </button>
-          </div>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input
-              autoFocus
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm địa điểm — toà nhà, đường, mốc..."
-              className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:border-orange-400 focus:bg-white"
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {predictions.length > 0 ? (
-            <ul className="divide-y divide-zinc-100">
-              {predictions.map((p) => (
-                <li key={p.place_id}>
-                  <button
-                    onClick={() => handlePredictionPick(p)}
-                    className="w-full text-left px-5 py-3 hover:bg-slate-50 flex items-start gap-3"
-                  >
-                    <span className="text-orange-500 text-lg shrink-0 mt-0.5">📍</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-slate-900 truncate">
-                        {p.structured_formatting.main_text}
-                      </div>
-                      <div className="text-xs text-slate-500 truncate">
-                        {p.structured_formatting.secondary_text}
-                      </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <>
-              <div className="px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-semibold">
-                Gợi ý
-              </div>
-              <ul className="divide-y divide-zinc-100">
-                {SUGGESTED_PICKUPS.map((s) => {
-                  const isCurrent = s.address === current.address;
-                  return (
-                    <li key={s.address}>
-                      <button
-                        onClick={() => onPick(s)}
-                        className="w-full text-left px-5 py-3 hover:bg-slate-50 flex items-start gap-3"
-                      >
-                        <span className="text-orange-500 text-lg shrink-0 mt-0.5">📍</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-slate-900 truncate">
-                            {s.shortLabel}
-                            {isCurrent && (
-                              <span className="ml-2 text-[10px] text-orange-600">đang chọn</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-500 truncate">{s.description}</div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 };
 
 // ──────────────────────────────────────────────────────────────────────────

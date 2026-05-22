@@ -9,14 +9,10 @@ import { useJourney } from "@/contexts/JourneyContext";
 
 // Points the user can pick from for each pickup mode.
 // Real FUTA has many more points but these cover the demo flow nicely.
+// Shuttle pickup is fixed to Tam Anh Hospital (non-editable).
 const PICKUP_POINTS: Record<PickupType, string[]> = {
   terminal: ["Bến xe Miền Tây", "Bến xe Miền Đông Mới", "Bến xe An Sương"],
-  shuttle: [
-    "72 Trần Hưng Đạo, Q.1",
-    "189 Nguyễn Thị Minh Khai, Q.3",
-    "Vincom Thảo Điền, TP. Thủ Đức",
-    "Aeon Tân Phú",
-  ],
+  shuttle: ["2B Đ. Phổ Quang, Tân Sơn Hòa, Hồ Chí Minh"],
   office: [
     "VP FUTA Quận 1 — 272 Đề Thám",
     "VP FUTA Tân Bình — 391 Lê Văn Sỹ",
@@ -623,17 +619,23 @@ export const BookingPage = () => {
                           );
                         })}
                       </div>
-                      <select
-                        value={pickupPoint}
-                        onChange={(e) => setPickupPoint(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-[15px] bg-white"
-                      >
-                        {PICKUP_POINTS[pickupType].map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      </select>
+                      {pickupType === "shuttle" ? (
+                        <div className="w-full border border-gray-300 rounded px-3 py-2 text-[15px] bg-slate-50 text-gray-700">
+                          2B Đ. Phổ Quang, Tân Sơn Hòa, Hồ Chí Minh
+                        </div>
+                      ) : (
+                        <select
+                          value={pickupPoint}
+                          onChange={(e) => setPickupPoint(e.target.value)}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-[15px] bg-white"
+                        >
+                          {PICKUP_POINTS[pickupType].map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <div className="text-xs text-gray-600 leading-relaxed">
                         {pickupType === "terminal" ? (
                           <>
