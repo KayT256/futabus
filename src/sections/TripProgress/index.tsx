@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -9,58 +9,51 @@ import {
   Phone,
   UtensilsCrossed,
   Star,
-  Bus,
   PartyPopper,
   Check,
   ChevronRight,
-  Play,
-  FastForward,
-  Square,
-  CircleGauge,
   Clock3,
   type LucideIcon,
 } from "lucide-react";
 import {
+  AdvancedMarker,
+  APIProvider,
+  Map,
+  Pin,
+  useMap,
+  useMapsLibrary,
+} from "@vis.gl/react-google-maps";
+import {
   useJourney,
   PHASE_ORDER,
   PHASE_INFO,
-  PHASE_DURATIONS_SEC,
   type JourneyPhase,
 } from "@/contexts/JourneyContext";
 import { madaguiRestStop } from "@/data/restStop";
 import { PageShell } from "@/components/PageShell";
+import {
+  buildPathProfile,
+  formatDuration,
+  formatMeters,
+  googlePathToLatLng,
+  haversineMeters,
+  interpolateAlongPath,
+  type LatLng,
+  type PathProfile,
+} from "@/lib/mapsHelpers";
+import {
+  ROUTE_WAYPOINTS,
+  REST_STOP_PROGRESS,
+  ARRIVAL_THRESHOLD_M,
+  ANIMATION_DURATION_MS,
+} from "@/data/routeWaypoints";
 
-// Re-render every second so any time-derived UI (countdowns, elapsed bars,
-// distance ETAs) stays current.
-function useTick(intervalMs = 1000): number {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(t);
-  }, [intervalMs]);
-  return now;
-}
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 
-// Format seconds as mm:ss (or hh:mm when > 1 hour, to keep ETA badges readable).
-function formatDuration(totalSec: number): string {
-  if (!isFinite(totalSec) || totalSec < 0) return "--:--";
-  const s = Math.max(0, Math.floor(totalSec));
-  if (s >= 3600) {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-  }
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-}
 
 // Journey Tracker — the user's home base while a journey is active.
-// 9 phases drive what the screen shows. The button labels change to reflect
-// where the user is, and phase-specific CTAs link to FUTA Rada / Terminal Map /
-// Quick Report / Smart Stop. The "[Demo] Bỏ qua" buttons are intentional — this is
-// a prototype and we need a way for stakeholders to step through phases without
-// waiting on real GPS / time elapses.
+// Now features automatic map-based simulation like FUTA Rada.
 
 export const TripProgress = () => {
   const navigate = useNavigate();
@@ -68,45 +61,47 @@ export const TripProgress = () => {
     activeJourney,
     advancePhase,
     endJourney,
-    startAutoSimulation,
-    stopAutoSimulation,
-    setSimulationSpeed,
+    setPhase,
   } = useJourney();
 
-  // Tick once per second so countdowns refresh visually.
-  const now = useTick(1000);
-
-  // Compute the per-phase countdown in seconds. Two modes:
-  //   • Auto-sim ON  → countdown is the simulated time remaining in the current
-  //                    phase (so 1x = real seconds, 5x = 5× faster). Stays in
-  //                    sync with the auto-advance timer in JourneyContext.
-  //   • Auto-sim OFF → countdown is the wall-clock time until the absolute
-  //                    target (shuttle arrival / bus departure / ETA), which is
-  //                    what real riders would actually see in production.
   const phase = activeJourney?.phase;
-  const phaseStart = activeJourney?.phaseStartedAt;
-  const speed = activeJourney?.simulationSpeed || 1;
-  const isSimulating = !!activeJourney?.autoSimulation;
 
-  const phaseRemainingSec = (() => {
-    if (!phase || !phaseStart) return 0;
-    const baseSec = PHASE_DURATIONS_SEC[phase];
-    const realElapsed = (now - phaseStart) / 1000;
-    const virtualElapsed = realElapsed * speed;
-    return Math.max(0, baseSec - virtualElapsed);
-  })();
+  // Route and animation state
+  const [pathProfile, setPathProfile] = useState<PathProfile | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [restStopLoc, setRestStopLoc] = useState<LatLng | null>(null);
+  const [arrivedAtRest, setArrivedAtRest] = useState(false);
+  const [arrivedAtDest, setArrivedAtDest] = useState(false);
 
-  const wallClockRemaining = (iso: string | undefined): number => {
-    if (!iso) return 0;
-    return Math.max(0, (new Date(iso).getTime() - now) / 1000);
-  };
+  // Calculate bus position from progress
+  const originLoc = ROUTE_WAYPOINTS[0].location;
+  const destLoc = ROUTE_WAYPOINTS[2].location;
+  
+  const busLoc = useMemo<LatLng>(() => {
+    if (!pathProfile) return originLoc;
+    return interpolateAlongPath(pathProfile, progress);
+  }, [pathProfile, progress, originLoc]);
 
-  const shuttleSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.shuttleArrivalTime);
-  const departureSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.busDepartureTime);
-  const etaSec = isSimulating ? phaseRemainingSec : wallClockRemaining(activeJourney?.estimatedArrivalTime);
+  // Calculate distance to rest stop and destination
+  const distanceToRest = useMemo(() => {
+    if (!restStopLoc || !busLoc) return Infinity;
+    return haversineMeters(busLoc, restStopLoc);
+  }, [busLoc, restStopLoc]);
 
-  // If the user lands here without an active journey (refresh after journey ended, shared URL, etc),
-  // send them home with a friendly toast instead of rendering a blank shell.
+  const distanceToDest = useMemo(() => {
+    if (!destLoc || !busLoc) return Infinity;
+    return haversineMeters(busLoc, destLoc);
+  }, [busLoc, destLoc]);
+
+  // ETA calculation
+  const etaSeconds = useMemo(() => {
+    if (!pathProfile || pathProfile.totalMeters === 0) return 0;
+    const remaining = pathProfile.totalMeters * (1 - progress);
+    const avgMps = pathProfile.totalMeters / (ANIMATION_DURATION_MS / 1000);
+    return avgMps > 0 ? remaining / avgMps : 0;
+  }, [pathProfile, progress]);
+
+  // If the user lands here without an active journey, send them home
   useEffect(() => {
     if (!activeJourney) {
       toast.info("Bạn chưa có chuyến đang hoạt động");
@@ -114,32 +109,99 @@ export const TripProgress = () => {
     }
   }, [activeJourney, navigate]);
 
-  // Show smart, context-aware toasts when entering certain phases.
-  // useEffect with phase dependency means it only fires once per phase transition.
+  // Automatic animation based on phase
   useEffect(() => {
-    if (!activeJourney) return;
-    if (activeJourney.phase === "waiting_shuttle") {
-      const t = setTimeout(
-        () =>
-          toast.info("Xe trung chuyển đã được điều phối", {
-            description: "Tài xế xe trung chuyển sẽ đến trong ~8 phút",
-          }),
-        800,
-      );
-      return () => clearTimeout(t);
+    if (!pathProfile || !phase) return;
+    
+    // Map phase to target progress
+    let targetProgress = 0;
+    let shouldAnimate = false;
+    
+    switch (phase) {
+      case "boarded":
+        targetProgress = 0;
+        shouldAnimate = false;
+        break;
+      case "in_transit":
+        targetProgress = REST_STOP_PROGRESS;
+        shouldAnimate = true;
+        break;
+      case "near_rest":
+      case "at_rest":
+        targetProgress = REST_STOP_PROGRESS;
+        shouldAnimate = false;
+        break;
+      case "resuming":
+        targetProgress = 1;
+        shouldAnimate = true;
+        break;
+      case "arrived":
+        targetProgress = 1;
+        shouldAnimate = false;
+        break;
+      default:
+        shouldAnimate = false;
     }
-    if (activeJourney.phase === "near_rest") {
+    
+    if (!shouldAnimate) {
+      setProgress(targetProgress);
+      return;
+    }
+    
+    // Calculate animation duration based on distance to travel
+    const currentProgress = progress;
+    const distanceToTravel = targetProgress - currentProgress;
+    const totalDistance = targetProgress === 1 ? 1 - REST_STOP_PROGRESS : REST_STOP_PROGRESS;
+    const segmentDuration = (distanceToTravel / totalDistance) * ANIMATION_DURATION_MS;
+    
+    let raf = 0;
+    let start = 0;
+    const startProgress = currentProgress;
+    
+    const tick = (t: number) => {
+      if (!start) start = t;
+      const elapsed = t - start;
+      const p = Math.min(targetProgress, startProgress + (elapsed / segmentDuration) * distanceToTravel);
+      setProgress(p);
+      if (p < targetProgress) raf = requestAnimationFrame(tick);
+    };
+    
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [pathProfile, phase, progress]);
+
+  // Auto-advance phases when reaching waypoints
+  useEffect(() => {
+    if (!phase) return;
+    
+    // Check if arrived at rest stop
+    if (phase === "in_transit" && distanceToRest <= ARRIVAL_THRESHOLD_M && !arrivedAtRest) {
+      setArrivedAtRest(true);
+      setPhase("near_rest");
       toast("🍽️ Sắp đến trạm dừng Madagui", {
         description: "Đặt đồ ăn trước để pickup nhanh khi xe dừng!",
         duration: 6000,
       });
     }
-    if (activeJourney.phase === "arrived") {
+    
+    // Check if arrived at destination
+    if (phase === "resuming" && distanceToDest <= ARRIVAL_THRESHOLD_M && !arrivedAtDest) {
+      setArrivedAtDest(true);
+      setPhase("arrived");
       toast.success("Chuyến đi đã hoàn thành 🎉", {
         description: "Hãy chia sẻ trải nghiệm với FUTA nhé",
       });
     }
-  }, [activeJourney?.phase, activeJourney]);
+  }, [phase, distanceToRest, distanceToDest, arrivedAtRest, arrivedAtDest, setPhase]);
+
+  // Reset arrival flags when phase changes
+  useEffect(() => {
+    if (phase === "boarded") {
+      setArrivedAtRest(false);
+      setArrivedAtDest(false);
+      setProgress(0);
+    }
+  }, [phase]);
 
   if (!activeJourney || !phase) return null;
 
@@ -149,9 +211,39 @@ export const TripProgress = () => {
   const phaseIdx = PHASE_ORDER.indexOf(phase);
   const info = PHASE_INFO[phase as JourneyPhase];
 
+  // Handle no API key case
+  if (!API_KEY) {
+    return (
+      <PageShell title="Hành trình của bạn" backTo="/" width="wide">
+        <div className="max-w-3xl mx-auto space-y-4">
+          <NoApiKeyNotice />
+          <button
+            onClick={() => {
+              if (phase === "arrived") {
+                endJourney();
+                navigate("/");
+              } else {
+                advancePhase();
+              }
+            }}
+            className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
+          >
+            {phase === "arrived" ? "Đóng hành trình" : "Tiếp tục (demo)"}
+          </button>
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell title="Hành trình của bạn" backTo="/" width="wide">
-      <div className="max-w-3xl mx-auto space-y-4">
+      <APIProvider
+        apiKey={API_KEY}
+        libraries={["routes", "marker"]}
+        language="vi"
+        region="VN"
+      >
+        <div className="max-w-3xl mx-auto space-y-4">
         {/* Trip header card with phase strip */}
         <section className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -210,10 +302,7 @@ export const TripProgress = () => {
                 {/* Countdown Timer */}
                 <PhaseCountdown
                   phase={phase}
-                  shuttleSec={shuttleSec}
-                  departureSec={departureSec}
-                  etaSec={etaSec}
-                  isSimulating={isSimulating}
+                  etaSeconds={etaSeconds}
                 />
               </div>
             </div>
@@ -310,7 +399,14 @@ export const TripProgress = () => {
 
           {phase === "in_transit" && (
             <>
-              <RouteVisual progress={0.35} />
+              <TripMap
+                originLoc={originLoc}
+                destLoc={destLoc}
+                busLoc={busLoc}
+                restStopLoc={restStopLoc}
+                onPathReady={setPathProfile}
+                onRestStopCalculated={setRestStopLoc}
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <ActionBtn
                   Icon={AlertTriangle}
@@ -333,7 +429,15 @@ export const TripProgress = () => {
 
           {phase === "near_rest" && (
             <>
-              <RouteVisual progress={0.55} highlightRest />
+              <TripMap
+                originLoc={originLoc}
+                destLoc={destLoc}
+                busLoc={busLoc}
+                restStopLoc={restStopLoc}
+                onPathReady={setPathProfile}
+                onRestStopCalculated={setRestStopLoc}
+                highlightRest
+              />
               <ActionBtn
                 Icon={UtensilsCrossed}
                 title="Đặt món tại trạm dừng"
@@ -378,7 +482,14 @@ export const TripProgress = () => {
 
           {phase === "resuming" && (
             <>
-              <RouteVisual progress={0.78} />
+              <TripMap
+                originLoc={originLoc}
+                destLoc={destLoc}
+                busLoc={busLoc}
+                restStopLoc={restStopLoc}
+                onPathReady={setPathProfile}
+                onRestStopCalculated={setRestStopLoc}
+              />
               <ActionBtn
                 Icon={AlertTriangle}
                 title="Quick Report"
@@ -421,75 +532,29 @@ export const TripProgress = () => {
           )}
         </section>
 
-        {/* Auto-simulation controls. Visually de-emphasised (dashed border,
-            slate palette) so stakeholders know it's a demo-only utility and
-            not a real product affordance. */}
-        <section className="border-t border-slate-200 pt-4">
-          <div className="bg-slate-50/80 rounded-xl border border-dashed border-slate-300 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-slate-200 grid place-items-center text-slate-600">
-                  <CircleGauge size={15} />
-                </div>
-                <div>
-                  <span className="font-semibold text-sm text-slate-900">Mô phỏng tự động</span>
-                  <span className="text-[10px] text-slate-500 ml-2 uppercase tracking-wide font-medium">Demo</span>
+        {/* Live trip stats */}
+        {pathProfile && (phase === "in_transit" || phase === "near_rest" || phase === "resuming") && (
+          <section className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-[11px] text-slate-500 mb-1">Quãng đường</div>
+                <div className="font-bold text-slate-900">
+                  {formatMeters(pathProfile.totalMeters * (1 - progress))}
                 </div>
               </div>
-              {activeJourney.autoSimulation && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Đang chạy {activeJourney.simulationSpeed || 1}x
-                </span>
-              )}
+              <div>
+                <div className="text-[11px] text-slate-500 mb-1">ETA</div>
+                <div className="font-bold text-slate-900">{formatDuration(etaSeconds)}</div>
+              </div>
+              <div>
+                <div className="text-[11px] text-slate-500 mb-1">Tiến độ</div>
+                <div className="font-bold text-slate-900">{Math.round(progress * 100)}%</div>
+              </div>
             </div>
-            <p className="text-xs text-slate-500 mb-3">
-              Tự động chuyển qua các giai đoạn mà không cần tương tác. Hữu ích cho demo & QA.
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {!activeJourney.autoSimulation ? (
-                <>
-                  <SimBtn onClick={() => startAutoSimulation(1)} Icon={Play}>
-                    Chạy 1x
-                  </SimBtn>
-                  <SimBtn onClick={() => startAutoSimulation(2)} Icon={FastForward}>
-                    Chạy 2x
-                  </SimBtn>
-                  <SimBtn onClick={() => startAutoSimulation(5)} Icon={FastForward}>
-                    Chạy 5x
-                  </SimBtn>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={stopAutoSimulation}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-medium text-red-700 hover:bg-red-100 transition"
-                  >
-                    <Square size={12} className="fill-red-700" />
-                    Dừng
-                  </button>
-                  <div className="flex items-center gap-1 ml-2">
-                    <span className="text-xs text-slate-500 mr-1">Tốc độ:</span>
-                    {[1, 2, 5, 10].map((speed) => (
-                      <button
-                        key={speed}
-                        onClick={() => setSimulationSpeed(speed)}
-                        className={`w-9 h-7 rounded-md text-xs font-bold transition ${
-                          (activeJourney.simulationSpeed || 1) === speed
-                            ? "bg-orange-500 text-white shadow-sm"
-                            : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
-                        }`}
-                      >
-                        {speed}x
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
+      </APIProvider>
     </PageShell>
   );
 };
@@ -534,27 +599,20 @@ const ActionBtn = ({
   </button>
 );
 
-// Phase countdown chip — reused by every active phase. Extracted because the
-// trio of inline JSX blocks were drifting visually as we added phases.
+// Phase countdown chip — simplified for map-based simulation
 const PhaseCountdown = ({
   phase,
-  shuttleSec,
-  departureSec,
-  etaSec,
-  isSimulating,
+  etaSeconds,
 }: {
   phase: JourneyPhase;
-  shuttleSec: number;
-  departureSec: number;
-  etaSec: number;
-  isSimulating: boolean;
+  etaSeconds: number;
 }) => {
   let label: string | null = null;
   let seconds = 0;
-  if (phase === "waiting_shuttle")     { label = isSimulating ? "Giả lập" : "Xe đến sau"; seconds = shuttleSec; }
-  else if (phase === "at_terminal")    { label = isSimulating ? "Giả lập" : "Xe khởi hành"; seconds = departureSec; }
-  else if (["shuttle_onboard", "boarded", "in_transit", "near_rest", "at_rest", "resuming"].includes(phase))
-                                       { label = isSimulating ? "Giả lập" : "Còn lại"; seconds = etaSec; }
+  if (["shuttle_onboard", "boarded", "in_transit", "near_rest", "at_rest", "resuming"].includes(phase)) {
+    label = "Còn lại";
+    seconds = etaSeconds;
+  }
   if (!label) return null;
   const expired = seconds <= 0;
   return (
@@ -615,71 +673,183 @@ const DemoSkipButton = ({ onClick, label }: { onClick: () => void; label: string
   </button>
 );
 
-// Compact button for the simulation controls strip.
-const SimBtn = ({
-  onClick,
-  Icon,
-  children,
-}: {
-  onClick: () => void;
-  Icon: LucideIcon;
-  children: React.ReactNode;
-}) => (
-  <button
-    onClick={onClick}
-    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:border-slate-400 transition"
-  >
-    <Icon size={12} />
-    {children}
-  </button>
-);
 
-// Visualizes the bus's progress along the TPHCM → Đà Lạt route (304 km).
-// Highlights Madagui rest stop at ~55% of the route when `highlightRest` is on.
-const RouteVisual = ({ progress, highlightRest }: { progress: number; highlightRest?: boolean }) => {
-  const totalKm = 304;
+// Trip map component with automatic animation
+const TripMap = ({
+  originLoc,
+  destLoc,
+  busLoc,
+  restStopLoc,
+  onPathReady,
+  onRestStopCalculated,
+  highlightRest,
+}: {
+  originLoc: LatLng;
+  destLoc: LatLng;
+  busLoc: LatLng;
+  restStopLoc: LatLng | null;
+  onPathReady: (p: PathProfile) => void;
+  onRestStopCalculated: (loc: LatLng) => void;
+  highlightRest?: boolean;
+}) => {
+  const center = useMemo<LatLng>(
+    () => ({
+      lat: (originLoc.lat + destLoc.lat) / 2,
+      lng: (originLoc.lng + destLoc.lng) / 2,
+    }),
+    [originLoc, destLoc],
+  );
+
   return (
-    <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-      <div className="flex items-center justify-between text-xs mb-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-orange-500" />
-          <span className="font-semibold text-slate-900">TP.HCM</span>
-        </div>
-        <span className="text-slate-500 font-medium tabular-nums">
-          {Math.round(progress * totalKm)} / {totalKm} km
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-900">Đà Lạt</span>
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-        </div>
-      </div>
-      <div className="relative h-2.5 bg-slate-100 rounded-full">
-        <div
-          className="absolute left-0 top-0 h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${progress * 100}%` }}
-        />
-        <div
-          className={`absolute top-1/2 -translate-y-1/2 left-[55%] -ml-1.5 w-3 h-3 rounded-full border-2 border-white ${
-            highlightRest ? "bg-amber-500 animate-pulse shadow-sm" : "bg-slate-400"
-          }`}
-          title="Trạm Madagui"
-        />
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -ml-3 transition-[left] duration-700 ease-out"
-          style={{ left: `${progress * 100}%` }}
-        >
-          <div className="w-6 h-6 rounded-full bg-white border-2 border-orange-500 grid place-items-center text-orange-600 shadow-sm">
-            <Bus size={12} strokeWidth={2.5} />
+    <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 grid place-items-center shrink-0 shadow-sm">
+            <Radar size={16} className="text-white" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-bold text-sm text-slate-900 leading-tight">Theo dõi hành trình</div>
+            <div className="text-[11px] text-slate-500 truncate">
+              TP.HCM → Đà Lạt
+            </div>
           </div>
         </div>
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] text-slate-500">
-        <span>0 km</span>
-        <span className={highlightRest ? "text-amber-600 font-semibold" : ""}>
-          {madaguiRestStop.name} 165km
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Live GPS
         </span>
-        <span>{totalKm} km</span>
+      </div>
+
+      <div className="relative h-[400px] bg-slate-100">
+        <Map
+          mapId={MAP_ID}
+          defaultCenter={center}
+          defaultZoom={8}
+          mapTypeId="roadmap"
+          tilt={0}
+          gestureHandling="greedy"
+          disableDefaultUI
+          zoomControl
+        >
+          <FitBounds origin={originLoc} dest={destLoc} />
+          <DrivingDirections
+            origin={originLoc}
+            dest={destLoc}
+            onPathReady={onPathReady}
+            onRestStopCalculated={onRestStopCalculated}
+          />
+          <AdvancedMarker position={originLoc} title="Bến xe Miền Tây">
+            <Pin background="#0ea5e9" borderColor="#075985" glyphColor="#ffffff" glyph="🚌" />
+          </AdvancedMarker>
+          {restStopLoc && (
+            <AdvancedMarker position={restStopLoc} title="Trạm dừng Madagui">
+              <Pin
+                background={highlightRest ? "#f59e0b" : "#64748b"}
+                borderColor={highlightRest ? "#b45309" : "#475569"}
+                glyphColor="#ffffff"
+                glyph="🍽️"
+              />
+            </AdvancedMarker>
+          )}
+          <AdvancedMarker position={destLoc} title="Bến xe Đà Lạt">
+            <Pin background="#10b981" borderColor="#047857" glyphColor="#ffffff" glyph="🏁" />
+          </AdvancedMarker>
+          <AdvancedMarker position={busLoc} title="Xe của bạn">
+            <Pin background="#f97316" borderColor="#9a3412" glyphColor="#ffffff" glyph="🚌" />
+          </AdvancedMarker>
+        </Map>
       </div>
     </div>
   );
 };
+
+// Camera autofit
+const FitBounds = ({ origin, dest }: { origin: LatLng; dest: LatLng }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(origin);
+    bounds.extend(dest);
+    map.fitBounds(bounds, 80);
+  }, [map, origin, dest]);
+  return null;
+};
+
+// Driving directions with rest stop calculation
+const DrivingDirections = ({
+  origin,
+  dest,
+  onPathReady,
+  onRestStopCalculated,
+}: {
+  origin: LatLng;
+  dest: LatLng;
+  onPathReady: (p: PathProfile) => void;
+  onRestStopCalculated: (loc: LatLng) => void;
+}) => {
+  const map = useMap();
+  const routesLib = useMapsLibrary("routes");
+  const rendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+
+  useEffect(() => {
+    if (!routesLib || !map) return;
+    rendererRef.current = new routesLib.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+      preserveViewport: true,
+      polylineOptions: {
+        strokeColor: "#f97316",
+        strokeOpacity: 0.95,
+        strokeWeight: 5,
+      },
+    });
+    return () => {
+      rendererRef.current?.setMap(null);
+      rendererRef.current = null;
+    };
+  }, [routesLib, map]);
+
+  useEffect(() => {
+    if (!routesLib || !rendererRef.current) return;
+    const service = new routesLib.DirectionsService();
+    let cancelled = false;
+    service
+      .route({
+        origin,
+        destination: dest,
+        travelMode: google.maps.TravelMode.DRIVING,
+      })
+      .then((resp) => {
+        if (cancelled) return;
+        rendererRef.current?.setDirections(resp);
+        const path = googlePathToLatLng(resp.routes[0]?.overview_path);
+        if (path.length > 1) {
+          const profile = buildPathProfile(path);
+          onPathReady(profile);
+          // Calculate rest stop location at 55% of route
+          const restStopLoc = interpolateAlongPath(profile, REST_STOP_PROGRESS);
+          onRestStopCalculated(restStopLoc);
+        }
+      })
+      .catch((err) => {
+        console.warn("[TripProgress] directions failed:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [routesLib, origin, dest, onPathReady, onRestStopCalculated]);
+
+  return null;
+};
+
+// No API key notice
+const NoApiKeyNotice = () => (
+  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900 leading-relaxed">
+    ⚙️ Theo dõi hành trình cần{" "}
+    <code className="px-1 bg-white border border-amber-200 rounded">VITE_GOOGLE_MAPS_API_KEY</code>{" "}
+    trong{" "}
+    <code className="px-1 bg-white border border-amber-200 rounded">.env.local</code>{" "}
+    để hiển thị bản đồ thời gian thực.
+  </div>
+);
