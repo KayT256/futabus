@@ -1,0 +1,90 @@
+[
+  {
+    "id": "route-1",
+    "name": "Hà Nội - Hồ Chí Minh",
+    "type": "Giường nằm",
+    "duration": "36 giờ",
+    "price": 850000,
+    "category": "intercity",
+    "isNew": true,
+    "image": "https://vcdn.acfc.com.vn/images/route-hn-hcm.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hn-hcm.jpg"
+  },
+  {
+    "id": "route-2",
+    "name": "Hồ Chí Minh - Đà Nẵng",
+    "type": "Ghế ngồi",
+    "duration": "12 giờ",
+    "price": 350000,
+    "category": "intercity",
+    "isNew": false,
+    "image": "https://vcdn.acfc.com.vn/images/route-hcm-dn.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hcm-dn.jpg"
+  },
+  {
+    "id": "route-3",
+    "name": "Hà Nội - Đà Nẵng",
+    "type": "Giường nằm",
+    "duration": "14 giờ",
+    "price": 450000,
+    "category": "intercity",
+    "isNew": true,
+    "image": "https://vcdn.acfc.com.vn/images/route-hn-dn.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hn-dn.jpg"
+  },
+  {
+    "id": "route-4",
+    "name": "Hồ Chí Minh - Cần Thơ",
+    "type": "Ghế ngồi",
+    "duration": "4 giờ",
+    "price": 150000,
+    "category": "intercity",
+    "isNew": false,
+    "image": "https://vcdn.acfc.com.vn/images/route-hcm-ct.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hcm-ct.jpg"
+  },
+  {
+    "id": "route-5",
+    "name": "Hà Nội - Lào Cai",
+    "type": "Ghế VIP",
+    "duration": "8 giờ",
+    "price": 550000,
+    "category": "intercity",
+    "isNew": true,
+    "image": "https://vcdn.acfc.com.vn/images/route-hn-lc.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hn-lc.jpg"
+  },
+  {
+    "id": "route-6",
+    "name": "Đà Nẵng - Huế",
+    "type": "Ghế ngồi",
+    "duration": "3 giờ",
+    "price": 120000,
+    "category": "intercity",
+    "isNew": false,
+    "image": "https://vcdn.acfc.com.vn/images/route-dn-hue.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-dn-hue.jpg"
+  },
+  {
+    "id": "route-7",
+    "name": "Hồ Chí Minh - Nha Trang",
+    "type": "Giường nằm",
+    "duration": "10 giờ",
+    "price": 400000,
+    "category": "intercity",
+    "isNew": false,
+    "image": "https://vcdn.acfc.com.vn/images/route-hcm-nt.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hcm-nt.jpg"
+  },
+  {
+    "id": "route-8",
+    "name": "Hà Nội - Hải Phòng",
+    "type": "Ghế ngồi",
+    "duration": "2 giờ",
+    "price": 80000,
+    "category": "intercity",
+    "isNew": false,
+    "image": "https://vcdn.acfc.com.vn/images/route-hn-hp.jpg",
+    "productImage": "https://vcdn.acfc.com.vn/images/product-hn-hp.jpg"
+  }
+]

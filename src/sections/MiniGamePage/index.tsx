@@ -1,10 +1,12 @@
+"use client";
+
 import { PageShell } from "@/components/PageShell";
 import { useVouchers } from "@/contexts/VoucherContext";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 export const MiniGamePage = () => {
   const { vouchers } = useVouchers();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const gameVouchers = vouchers.filter((v) => v.source !== "payment" && !v.used);
 
@@ -60,7 +62,7 @@ export const MiniGamePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Daily Quiz Card */}
           <div
-            onClick={() => navigate("/mini-games/quiz")}
+            onClick={() => router.push("/mini-games/quiz")}
             className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="text-4xl mb-3">📚</div>
@@ -75,7 +77,7 @@ export const MiniGamePage = () => {
 
           {/* Roulette Card */}
           <div
-            onClick={() => navigate("/mini-games/roulette")}
+            onClick={() => router.push("/mini-games/roulette")}
             className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="text-4xl mb-3">🎰</div>

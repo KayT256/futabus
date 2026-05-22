@@ -81,7 +81,7 @@ export const VouchersPage = () => {
                       <span className="text-sm font-semibold text-emerald-600">
                         {formatSaving(voucher.saving, voucher.label)}
                       </span>
-                      {"wallet" in voucher && (
+                      {"wallet" in voucher && voucher.wallet && (
                         <span className="text-[10px] text-slate-500">{getWalletLabel(voucher.wallet)}</span>
                       )}
                     </div>

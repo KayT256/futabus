@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 // Shared shell for every "secondary" page (anything that isn't home/search/booking).
 // Centralises the back-button header + gray body background so individual pages can
@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 interface Props {
   // Optional page title rendered next to the back button — keeps the user oriented.
   title?: string;
-  // If omitted, the back button calls navigate(-1) (browser back).
+  // If omitted, the back button calls router.push(-1) (browser back).
   backTo?: string;
   // Right-side header slot — useful for action buttons (e.g. "Đặt lại", filter chips).
   headerRight?: ReactNode;
@@ -30,7 +30,7 @@ export const PageShell = ({
   children,
   bottomPadding = "default",
 }: Props) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const railClass = width === "narrow" ? "max-w-md mx-auto" : "max-w-[1200px] mx-auto";
   const padBottom = bottomPadding === "sticky" ? "pb-28" : "pb-10";
 
@@ -40,7 +40,7 @@ export const PageShell = ({
       <div className="bg-white border-b border-zinc-200 sticky top-0 z-30">
         <div className={`${railClass} px-4 py-3 flex items-center gap-3`}>
           <button
-            onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
+            onClick={() => (backTo ? router.push(backTo) : router.back())}
             className="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition shrink-0"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

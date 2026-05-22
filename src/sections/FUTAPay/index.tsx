@@ -1,5 +1,7 @@
+"use client";
+
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useWallet, type Transaction } from "@/contexts/WalletContext";
 import { TopUpSheet } from "@/components/TopUpSheet";
@@ -91,7 +93,7 @@ const TransactionRow = ({ tx }: { tx: Transaction }) => {
 type TxFilter = "all" | "topup" | "payment";
 
 export const FUTAPay = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const {
     balance,
     transactions,
@@ -118,7 +120,7 @@ export const FUTAPay = () => {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-slate-700 hover:text-orange-500"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Trip } from "@/data/trips";
 
 interface TripCardProps {
@@ -7,7 +9,7 @@ interface TripCardProps {
 }
 
 export const TripCard = ({ trip, isLoggedIn }: TripCardProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="text-sm bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_0px_1px,rgb(209,213,219)_0px_0px_0px_1px_inset] box-border caret-transparent flex flex-col leading-5 outline-[3px] w-full border border-zinc-200 mb-2 pt-3 rounded-none border-solid md:text-base md:leading-6 md:mb-6 md:pt-6 md:rounded-xl">
@@ -167,7 +169,7 @@ export const TripCard = ({ trip, isLoggedIn }: TripCardProps) => {
         </div>
         <button
           type="button"
-          onClick={() => navigate(`/booking?tripId=${trip.id}`)}
+          onClick={() => router.push(`/booking?tripId=${trip.id}`)}
           className="absolute text-orange-600 text-sm normal-nums bg-orange-600/20 shadow-[rgba(0,0,0,0.016)_0px_2px_0px_0px] caret-transparent hidden h-8 leading-[22.001px] text-center text-nowrap z-10 px-5 py-0 rounded-[32px] right-5 md:block before:accent-auto before:bg-white before:box-border before:caret-transparent before:text-orange-600 before:hidden before:text-sm before:not-italic before:normal-nums before:font-normal before:tracking-[normal] before:leading-[22.001px] before:list-outside before:list-disc before:opacity-35 before:outline-[3px] before:pointer-events-none before:absolute before:text-center before:no-underline before:indent-[0px] before:normal-case before:text-nowrap before:visible before:z-[1] before:rounded-[32px] before:border-separate before:-inset-px before:font-intertight cursor-pointer hover:bg-orange-600/30"
         >
           <span className="box-border caret-transparent inline-block outline-[3px] text-nowrap">
@@ -175,7 +177,7 @@ export const TripCard = ({ trip, isLoggedIn }: TripCardProps) => {
           </span>
         </button>
       </div>
-      <div onClick={() => navigate(`/booking?tripId=${trip.id}`)} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
+      <div onClick={() => router.push(`/booking?tripId=${trip.id}`)} className="text-gray-500 text-sm items-center box-border caret-transparent cursor-pointer flex justify-between leading-5 min-h-[auto] min-w-[auto] outline-[3px] py-2 px-3 md:text-base md:hidden md:leading-6 md:min-h-0 md:min-w-0 active:bg-orange-50">
         <div className="text-sm items-center box-border caret-transparent gap-x-2 flex leading-5 min-h-[auto] min-w-[auto] outline-[3px] gap-y-2 w-full md:text-base md:leading-6 md:min-h-0 md:min-w-0">
           <div className="text-sm bg-neutral-300 box-border caret-transparent h-1.5 leading-5 min-h-[auto] min-w-[auto] outline-[3px] w-1.5 rounded-full md:text-base md:leading-6 md:min-h-0 md:min-w-0"></div>
           <span className="text-sm box-border caret-transparent block leading-5 min-h-[auto] min-w-[auto] outline-[3px] md:text-base md:leading-6 md:min-h-0 md:min-w-0">

@@ -1,8 +1,11 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { trips } from "@/data/trips";
 import type { PickupType, DropoffType } from "@/contexts/JourneyContext";
+import { useJourney } from "@/contexts/JourneyContext";
 
 // Points the user can pick from for each pickup mode.
 // Real FUTA has many more points but these cover the demo flow nicely.
@@ -307,9 +310,9 @@ const DeckTable = ({
 );
 
 export const BookingPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { startJourney } = useJourney();
   const tripId = searchParams.get('tripId');
   const trip = (tripId ? trips.find(t => t.id === tripId) : null) ?? trips[0];
   
@@ -352,16 +355,18 @@ export const BookingPage = () => {
       toast.error("Vui lòng chọn ghế");
       return;
     }
-    // Pass the booking context via router state — keeps the URL clean and avoids URL-encoding
+    // Pass the booking context via JourneyContext — keeps the URL clean and avoids URL-encoding
     // long Vietnamese pickup-point strings.
-    navigate("/payment", {
-      state: {
-        tripId: trip.id,
-        seats: selectedSeats,
-        pickup: { pickupType, pickupPoint, dropoffType, dropoffPoint },
-        customer: customerForm,
-      },
+    startJourney({
+      trip,
+      seats: selectedSeats,
+      pickup: { pickupType, pickupPoint, dropoffType, dropoffPoint },
+      paymentMethod: "futapay",
+      voucher: null,
+      bookedAt: new Date().toISOString(),
+      totalPaid: trip.price * selectedSeats.length,
     });
+    router.push("/payment");
   };
 
   const toggleSeat = (
@@ -396,7 +401,7 @@ export const BookingPage = () => {
       <div className="bg-white border-b">
         <div className="max-w-[1200px] mx-auto px-4 py-3 flex items-center">
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => router.push('/search')}
             className="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -720,7 +725,7 @@ export const BookingPage = () => {
                 <div className="flex flex-auto items-center justify-end gap-3 sm:gap-4 w-full sm:w-auto">
                   <button
                     type="button"
-                    onClick={() => navigate('/search')}
+                    onClick={() => router.push('/search')}
                     className="rounded-full border border-gray-300 bg-white px-6 sm:px-8 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                   >
                     Hủy
@@ -754,7 +759,7 @@ export const BookingPage = () => {
               <p className="mb-4 flex items-center justify-between text-xl font-medium text-black">
                 <span className="flex items-center gap-2">Thông tin tài xế</span>
                 <button
-                  onClick={() => navigate(`/crew-score/${trip.driver.id}?tripId=${trip.id}`)}
+                  onClick={() => router.push(`/crew-score/${trip.driver.id}?tripId=${trip.id}`)}
                   className="text-base text-orange-500 underline cursor-pointer hover:text-orange-600"
                 >
                   Chi tiết
@@ -888,7 +893,7 @@ export const BookingPage = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate('/search')}
+            onClick={() => router.push('/search')}
             className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
           >
             Hủy

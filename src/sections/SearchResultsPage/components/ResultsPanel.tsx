@@ -1,10 +1,12 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { TripCard } from "./TripCard";
 import { trips } from "@/data/trips";
 
 export const ResultsPanel = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isLoggedIn } = useAuth();
   
   return (

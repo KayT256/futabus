@@ -1,4 +1,6 @@
-import { useLocation, useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -13,8 +15,8 @@ const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 //  - from "payment" → just paid, primary CTA = "Về trang chủ", secondary = open journey
 //  - from "journey" → reached via the active journey screen during the trip, primary CTA = back to journey
 export const TicketDetail = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { activeJourney } = useJourney();
 
   // If there's no active journey (e.g. user shared the URL or refreshed after journey ended),
@@ -22,16 +24,18 @@ export const TicketDetail = () => {
   useEffect(() => {
     if (!activeJourney) {
       toast.info("Không có vé đang hoạt động — quay về trang chủ");
-      navigate("/", { replace: true });
+      router.replace("/");
     }
-  }, [activeJourney, navigate]);
+  }, [activeJourney, router]);
 
   if (!activeJourney) return null;
 
   const { booking } = activeJourney;
   const { trip, seats, pickup, paymentMethod, voucher, totalPaid } = booking;
 
-  const fromMode = (location.state as { from?: "payment" | "journey" } | null)?.from ?? "payment";
+  // Pass entry-point intent via ?from=payment|journey since Next.js router has no location.state.
+  // Defaults to "payment" so deep links land on the post-purchase view.
+  const fromMode = (searchParams.get("from") === "journey" ? "journey" : "payment") as "payment" | "journey";
   // Ticket code blends trip id + booking time + a slice of seat list — uniquely identifies the booking.
   // Real FUTA uses 10-digit numeric codes; this matches that format closely enough for the demo.
   const ticketCode = `FUTA${trip.id.replace(/\D/g, "")}${seats.length}${booking.bookedAt.slice(11, 13)}${booking.bookedAt.slice(14, 16)}`;
@@ -134,7 +138,7 @@ export const TicketDetail = () => {
               Đưa mã QR cho nhân viên để được kiểm tra &amp; lên xe
             </div>
             <button
-              onClick={() => navigate("/trip-progress")}
+              onClick={() => router.push("/trip-progress")}
               className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-orange-600"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,13 +150,13 @@ export const TicketDetail = () => {
         ) : (
           <div className="mt-6 space-y-2">
             <button
-              onClick={() => navigate("/trip-progress")}
+              onClick={() => router.push("/trip-progress")}
               className="w-full py-3 rounded-full bg-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-orange-600"
             >
               Mở hành trình của bạn →
             </button>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => router.push("/")}
               className="w-full py-3 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50"
             >
               Về trang chủ

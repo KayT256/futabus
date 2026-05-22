@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { getTerminalByName } from "@/data/terminals";
@@ -27,7 +29,7 @@ declare global {
 // which is the screen where motion actually helps the rider.
 
 export const TerminalMap = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { activeJourney, setFoundBusAtTerminal } = useJourney();
 
   // Load model-viewer web component
@@ -44,8 +46,8 @@ export const TerminalMap = () => {
   // Guard: if the user lands here without an active journey (refresh, shared URL)
   // we bounce them home with a toast rather than rendering an empty shell.
   useEffect(() => {
-    if (!activeJourney) navigate("/", { replace: true });
-  }, [activeJourney, navigate]);
+    if (!activeJourney) router.replace("/");
+  }, [activeJourney, router]);
 
   if (!activeJourney) return null;
   const terminal = getTerminalByName(activeJourney.booking.trip.pickupTerminal);
@@ -56,7 +58,7 @@ export const TerminalMap = () => {
     toast.success("Đã tìm thấy xe của bạn", {
       description: "Đưa mã QR vé cho nhân viên kiểm tra",
     });
-    navigate("/trip-progress");
+    router.push("/trip-progress");
   };
 
   return (
@@ -109,6 +111,7 @@ export const TerminalMap = () => {
           </div>
           <div className="p-4">
             <div className="w-full aspect-video bg-slate-100 rounded-lg overflow-hidden">
+              {/* @ts-ignore - model-viewer is a web component loaded dynamically */}
               <model-viewer
                 src="/futa-ben-xe-mien-tay-3d-station-2.glb"
                 alt="Mô hình 3D Bến xe Miền Tây - Di chuyển"
@@ -140,6 +143,7 @@ export const TerminalMap = () => {
           </div>
           <div className="p-4">
             <div className="w-full aspect-video bg-slate-100 rounded-lg overflow-hidden">
+              {/* @ts-ignore - model-viewer is a web component loaded dynamically */}
               <model-viewer
                 src="/futa-ben-xe-mien-tay-3d-station-2.glb"
                 alt="Mô hình 3D Bến xe Miền Tây - Toàn cảnh"

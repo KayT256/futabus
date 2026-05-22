@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Radar,
@@ -48,15 +48,15 @@ import {
   ANIMATION_DURATION_MS,
 } from "@/data/routeWaypoints";
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 
 
 // Journey Tracker — the user's home base while a journey is active.
 // Now features automatic map-based simulation like FUTA Rada.
 
 export const TripProgress = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const {
     activeJourney,
     advancePhase,
@@ -105,9 +105,9 @@ export const TripProgress = () => {
   useEffect(() => {
     if (!activeJourney) {
       toast.info("Bạn chưa có chuyến đang hoạt động");
-      navigate("/", { replace: true });
+      router.replace("/");
     }
-  }, [activeJourney, navigate]);
+  }, [activeJourney, router]);
 
   // Automatic animation based on phase
   useEffect(() => {
@@ -221,7 +221,7 @@ export const TripProgress = () => {
             onClick={() => {
               if (phase === "arrived") {
                 endJourney();
-                navigate("/");
+                router.push("/");
               } else {
                 advancePhase();
               }
@@ -346,7 +346,7 @@ export const TripProgress = () => {
                 Icon={Radar}
                 title="Theo dõi vị trí xe trung chuyển"
                 desc="Mở FUTA Rada — xem xe đến gần bạn"
-                onClick={() => navigate("/futa-rada")}
+                onClick={() => router.push("/futa-rada")}
               />
               <DemoSkipButton onClick={advancePhase} label="Bỏ qua bước này" />
             </>
@@ -367,7 +367,7 @@ export const TripProgress = () => {
                 Icon={MapPin}
                 title="Tìm xe của tôi tại bến"
                 desc="Bản đồ chỉ đường tới đúng vị trí xe Limousine"
-                onClick={() => navigate("/terminal-map")}
+                onClick={() => router.push("/terminal-map")}
               />
               <DemoSkipButton onClick={advancePhase} label="Đã tự tìm thấy" />
             </>
@@ -382,7 +382,7 @@ export const TripProgress = () => {
                 Icon={Ticket}
                 title="Xem thông tin chi tiết vé"
                 desc="Hiện mã QR để nhân viên quét — xác nhận lên xe"
-                onClick={() => navigate("/ticket", { state: { from: "journey" } })}
+                onClick={() => router.push("/ticket")}
               />
               <PrimaryCta onClick={advancePhase}>Lên xe thành công</PrimaryCta>
             </>
@@ -412,7 +412,7 @@ export const TripProgress = () => {
                   Icon={AlertTriangle}
                   title="Quick Report"
                   desc="Báo cáo vấn đề trên xe"
-                  onClick={() => navigate("/quick-report")}
+                  onClick={() => router.push("/quick-report")}
                   compact
                 />
                 <ActionBtn
@@ -442,14 +442,14 @@ export const TripProgress = () => {
                 Icon={UtensilsCrossed}
                 title="Đặt món tại trạm dừng"
                 desc="Smart Stop — pickup bằng QR khi xe dừng"
-                onClick={() => navigate("/smart-stop")}
+                onClick={() => router.push("/smart-stop")}
                 badge={cartCount > 0 ? `${cartCount} món` : undefined}
               />
               <ActionBtn
                 Icon={AlertTriangle}
                 title="Quick Report"
                 desc="Báo cáo vấn đề trên xe"
-                onClick={() => navigate("/quick-report")}
+                onClick={() => router.push("/quick-report")}
                 compact
               />
               <PrimaryCta onClick={advancePhase}>Đã đến {madaguiRestStop.name}</PrimaryCta>
@@ -466,14 +466,14 @@ export const TripProgress = () => {
                   Icon={Ticket}
                   title={pickedUp ? "Đã pickup đơn" : "Mở QR pickup đơn hàng"}
                   desc={pickedUp ? "Chúc bạn ăn ngon miệng!" : "Quẹt mã tại quầy Smart Stop"}
-                  onClick={() => navigate("/smart-stop")}
+                  onClick={() => router.push("/smart-stop")}
                 />
               ) : (
                 <ActionBtn
                   Icon={UtensilsCrossed}
                   title="Đặt món nhanh"
                   desc="Vẫn còn thời gian — đặt và pickup tại quầy"
-                  onClick={() => navigate("/smart-stop")}
+                  onClick={() => router.push("/smart-stop")}
                 />
               )}
               <PrimaryCta onClick={advancePhase}>Xe tiếp tục khởi hành</PrimaryCta>
@@ -494,7 +494,7 @@ export const TripProgress = () => {
                 Icon={AlertTriangle}
                 title="Quick Report"
                 desc="Báo cáo vấn đề trên xe"
-                onClick={() => navigate("/quick-report")}
+                onClick={() => router.push("/quick-report")}
                 compact
               />
               <PrimaryCta onClick={advancePhase}>Đã đến Đà Lạt</PrimaryCta>
@@ -516,12 +516,12 @@ export const TripProgress = () => {
                 Icon={Star}
                 title="Đánh giá chuyến đi"
                 desc="Chia sẻ trải nghiệm với tài xế & phụ xe"
-                onClick={() => navigate("/post-trip-feedback", { state: { trip } })}
+                onClick={() => router.push("/post-trip-feedback")}
               />
               <button
                 onClick={() => {
                   endJourney();
-                  navigate("/");
+                  router.push("/");
                   toast.success("Đã kết thúc hành trình");
                 }}
                 className="w-full py-3 rounded-full border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
@@ -847,7 +847,7 @@ const DrivingDirections = ({
 const NoApiKeyNotice = () => (
   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900 leading-relaxed">
     ⚙️ Theo dõi hành trình cần{" "}
-    <code className="px-1 bg-white border border-amber-200 rounded">VITE_GOOGLE_MAPS_API_KEY</code>{" "}
+    <code className="px-1 bg-white border border-amber-200 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
     trong{" "}
     <code className="px-1 bg-white border border-amber-200 rounded">.env.local</code>{" "}
     để hiển thị bản đồ thời gian thực.

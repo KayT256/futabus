@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.next
 
 # Editor directories and files
 .vscode/*
@@ -26,6 +27,9 @@ dist-ssr
 # My local working notes (not for repo)
 MOCK.md
 CONTEXT.md
+
+# External reference repos
+levis-demo/
 
 # Local env files — never commit secrets like API keys
 .env

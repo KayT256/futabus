@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { trips } from "@/data/trips";
 import { useJourney } from "@/contexts/JourneyContext";
@@ -25,8 +27,8 @@ const ratingLabels: Record<number, string> = {
 };
 
 export const PostTripFeedback = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { activeJourney, endJourney } = useJourney();
 
   // Hooks must come before any early return to satisfy Rules of Hooks.
@@ -40,10 +42,10 @@ export const PostTripFeedback = () => {
   const [comment, setComment] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Source of truth for the trip: active journey (preferred) → router state → fallback.
+  // Source of truth for the trip: active journey (preferred) → fallback.
   // This keeps post-trip feedback usable both from the live journey flow and from
   // direct deep-links into the page.
-  const trip = activeJourney?.booking.trip ?? location.state?.trip ?? trips[0];
+  const trip = activeJourney?.booking.trip ?? trips[0];
 
   if (!trip || !trip.driver) {
     return (
@@ -51,7 +53,7 @@ export const PostTripFeedback = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-sm w-full text-center">
           <p className="text-slate-500">Không tìm thấy thông tin chuyến đi</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
             className="mt-4 text-orange-500 underline"
           >
             Về trang chủ
@@ -78,7 +80,7 @@ export const PostTripFeedback = () => {
         description: "Phản hồi sẽ giúp đội ngũ FUTA cải thiện dịch vụ.",
       });
       setIsSubmitted(true);
-      setTimeout(() => navigate('/'), 1800);
+      setTimeout(() => router.push('/'), 1800);
     }
   };
 
@@ -332,7 +334,7 @@ export const PostTripFeedback = () => {
           </button>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
             className="w-full py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
           >
             Bỏ qua

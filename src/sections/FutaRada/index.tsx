@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Radar, Phone, MessageCircle, MapPin, ChevronRight, Search, X } from "lucide-react";
 import {
@@ -42,8 +44,8 @@ import {
 //     of the FUTA Rada identity even though the live map is now the source
 //     of truth for "where is my shuttle".
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 
 // Total wall-clock animation from origin → user, in milliseconds. A real
 // shuttle on this corridor takes 20–40 minutes; we collapse to ~50s so the
@@ -118,19 +120,19 @@ const SUGGESTED_PICKUPS: PickupLocation[] = [
 // ──────────────────────────────────────────────────────────────────────────
 
 export const FutaRada = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { activeJourney, setPhase } = useJourney();
 
   useEffect(() => {
-    if (!activeJourney) navigate("/", { replace: true });
-  }, [activeJourney, navigate]);
+    if (!activeJourney) router.replace("/");
+  }, [activeJourney, router]);
 
   if (!activeJourney) return null;
 
   const handleArrived = () => {
     setPhase("shuttle_onboard");
     toast.success("Đã lên xe trung chuyển");
-    navigate("/trip-progress");
+    router.push("/trip-progress");
   };
 
   if (!API_KEY) {
@@ -757,7 +759,7 @@ const UserPin = () => (
 const NoApiKeyNotice = () => (
   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900 leading-relaxed">
     ⚙️ FUTA Rada cần{" "}
-    <code className="px-1 bg-white border border-amber-200 rounded">VITE_GOOGLE_MAPS_API_KEY</code>{" "}
+    <code className="px-1 bg-white border border-amber-200 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
     trong{" "}
     <code className="px-1 bg-white border border-amber-200 rounded">.env.local</code>{" "}
     để hiển thị bản đồ thời gian thực và animation xe trung chuyển.

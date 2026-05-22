@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { trips } from "@/data/trips";
 import { wallets, getWalletLabel, type WalletId } from "@/data/wallets";
@@ -40,22 +40,21 @@ const Row = ({ k, v, bold }: { k: string; v: string; bold?: boolean }) => (
 );
 
 export const PaymentPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { startJourney } = useJourney();
+  const router = useRouter();
+  const { activeJourney, startJourney } = useJourney();
   const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
   const { recordTripCompletion, vouchers: gameVouchers, useVoucher: useGameVoucher } = useVouchers();
 
-  const state = (location.state ?? {}) as BookingState;
-  const trip = trips.find((t) => t.id === state.tripId) ?? trips[0];
-  const seats = state.seats?.length ? state.seats : ["A09"];
-  const pickup: PickupInfo =
-    state.pickup ?? {
-      pickupType: "terminal",
-      pickupPoint: trip.pickupTerminal,
-      dropoffType: "terminal",
-      dropoffPoint: trip.dropoffTerminal,
-    };
+  // Get booking data from JourneyContext instead of router state
+  const trip = activeJourney?.booking.trip ?? trips[0];
+  const seats = activeJourney?.booking.seats ?? ["A09"];
+  const pickup: PickupInfo = activeJourney?.booking.pickup ?? {
+    pickupType: "terminal",
+    pickupPoint: trip.pickupTerminal,
+    dropoffType: "terminal",
+    dropoffPoint: trip.dropoffTerminal,
+  };
+  const customer = { name: "", phone: "", email: "" }; // Default customer info
 
   const [method, setMethod] = useState<WalletId>("futapay");
   const [voucher, setVoucher] = useState<Voucher | GameVoucher | null>(null);
@@ -164,7 +163,7 @@ export const PaymentPage = () => {
     // Record trip completion for mini-game eligibility
     recordTripCompletion();
     toast.success("Thanh toán thành công!", { description: `Mã vé: FUTA${trip.id}` });
-    navigate("/ticket", { replace: true, state: { from: "payment" } });
+    router.replace("/ticket");
   };
 
   // FUTAPay path — actually deduct from the wallet balance via WalletContext.pay().
@@ -203,11 +202,11 @@ export const PaymentPage = () => {
     }, 600);
   };
 
-  // If someone lands on /payment without a booking state, redirect to /search.
+  // If someone lands on /payment without an active journey, redirect to /search.
   useEffect(() => {
-    if (!state.tripId) {
+    if (!activeJourney) {
       toast.info("Chưa có chuyến nào được chọn — chuyển sang trang tìm chuyến");
-      navigate("/search", { replace: true });
+      router.replace("/search");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -218,7 +217,7 @@ export const PaymentPage = () => {
       <div className="bg-white border-b">
         <div className="max-w-[1200px] mx-auto px-4 py-3 flex items-center">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +272,7 @@ export const PaymentPage = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/futapay")}
+                    onClick={() => router.push("/futapay")}
                     className="text-xs font-semibold text-emerald-700 hover:underline whitespace-nowrap"
                   >
                     Quản lý ví →

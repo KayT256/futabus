@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import {
   ArrowLeft,
@@ -63,7 +65,7 @@ const monthlyTrendData = [
 ];
 
 export const CrewScoreDashboard = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState<"week" | "month" | "quarter">("month");
   const [analyticsTab, setAnalyticsTab] = useState<"sentiment" | "keywords" | "topics">("sentiment");
 
@@ -106,7 +108,7 @@ export const CrewScoreDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => router.push("/")}
               className="flex items-center gap-1.5 text-slate-500 hover:text-slate-900 transition-colors font-medium text-sm"
             >
               <ArrowLeft size={18} />
@@ -637,7 +639,7 @@ export const CrewScoreDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <button
-                        onClick={() => navigate(`/crew-score/${staff.id}?from=dashboard`)}
+                        onClick={() => router.push(`/crew-score/${staff.id}?from=dashboard`)}
                         className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-medium px-3 py-1.5 rounded-lg transition-colors text-sm"
                       >
                         Chi tiết <ChevronRight size={14} />

@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 export const BookingHero = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   
   return (
     <section className="relative text-sm box-border caret-transparent flex flex-col leading-5 max-w-[1128px] outline-[3px] mx-auto pt-48 md:text-base md:leading-6 md:pt-[448px]">
@@ -158,7 +160,7 @@ export const BookingHero = () => {
           </div>
           <div className="relative text-sm box-border caret-transparent flex justify-center leading-5 outline-[3px] w-full md:text-base md:leading-6">
             <button 
-              onClick={() => navigate('/search')}
+              onClick={() => router.push('/search')}
               className="absolute text-white text-base normal-nums bg-orange-600 caret-transparent block h-12 leading-6 outline-[3px] text-center z-10 px-20 py-0 rounded-full cursor-pointer hover:bg-orange-700 transition-colors"
             >
               Tìm chuyến xe

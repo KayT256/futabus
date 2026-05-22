@@ -1,6 +1,8 @@
+"use client";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
@@ -8,7 +10,7 @@ const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 export const MobileHeader = () => {
   const { isLoggedIn, userName, login } = useAuth();
   const { balance } = useWallet();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -22,12 +24,12 @@ export const MobileHeader = () => {
 
   const handleNavigateToProgress = () => {
     setIsDropdownOpen(false);
-    navigate('/trip-progress');
+    router.push("/trip-progress");
   };
 
   const handleNavigateToFutapay = () => {
     setIsDropdownOpen(false);
-    navigate('/futapay');
+    router.push("/futapay");
   };
 
   // Close dropdown when clicking outside

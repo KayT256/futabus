@@ -1,5 +1,7 @@
+"use client";
+
 import { useMemo, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { getDriverReviews, type Review, type Sentiment } from "@/data/reviews";
@@ -166,12 +168,12 @@ const ReviewCard = ({ review, onHelpful }: { review: Review; onHelpful: (id: str
 };
 
 export const CrewScoreDetail = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const tripId = searchParams.get('tripId');
   const from = searchParams.get('from');
-  const { id } = useParams<{ id: string }>();
+  const pathname = usePathname();
+  const id = pathname.split('/').pop();
 
   // ── Review state (seeded from data, extended by new submissions) ──
   const driverId = id || "TX001";
@@ -293,7 +295,7 @@ export const CrewScoreDetail = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
-              onClick={() => from === 'dashboard' ? navigate('/crew-score-dashboard') : navigate(tripId ? `/booking?tripId=${tripId}` : '/booking')}
+              onClick={() => from === 'dashboard' ? router.push('/crew-score-dashboard') : router.push(tripId ? `/booking?tripId=${tripId}` : '/booking')}
               className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-medium"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

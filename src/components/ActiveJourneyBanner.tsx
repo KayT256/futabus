@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useJourney, PHASE_INFO, PHASE_ORDER, type JourneyPhase } from "@/contexts/JourneyContext";
 
 // Phase-driven quick actions surface the right tools at the right time so users
@@ -46,7 +46,7 @@ const formatTrip = (date: string, dep: string, arr: string) => `${date} · ${dep
 // 1128px content rail, intertight font, rounded-2xl + soft outline halo to feel
 // like the BookingHero search card it sits below.
 export const ActiveJourneyBanner = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { activeJourney } = useJourney();
 
   if (!activeJourney) return null;
@@ -88,13 +88,13 @@ export const ActiveJourneyBanner = () => {
             </div>
             <div className="hidden md:flex items-center gap-2 shrink-0">
               <button
-                onClick={() => navigate("/ticket", { state: { from: "home" } })}
+                onClick={() => router.push("/ticket")}
                 className="text-xs px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white font-semibold backdrop-blur ring-1 ring-white/30 transition"
               >
                 Xem vé
               </button>
               <button
-                onClick={() => navigate("/trip-progress")}
+                onClick={() => router.push("/trip-progress")}
                 className="text-xs px-5 py-2 rounded-full bg-white text-orange-600 font-bold hover:bg-orange-50 transition flex items-center gap-1.5"
               >
                 Hành trình
@@ -108,13 +108,13 @@ export const ActiveJourneyBanner = () => {
           {/* Mobile CTAs — two equal-width buttons below the title block */}
           <div className="flex md:hidden items-center gap-2 mt-3">
             <button
-              onClick={() => navigate("/ticket", { state: { from: "home" } })}
+              onClick={() => router.push("/ticket")}
               className="flex-1 text-xs px-3 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white font-semibold backdrop-blur ring-1 ring-white/30 transition"
             >
               Xem vé
             </button>
             <button
-              onClick={() => navigate("/trip-progress")}
+              onClick={() => router.push("/trip-progress")}
               className="flex-1 text-xs px-3 py-2 rounded-full bg-white text-orange-600 font-bold hover:bg-orange-50 transition"
             >
               Hành trình →
@@ -176,7 +176,7 @@ export const ActiveJourneyBanner = () => {
               {actions.map((a) => (
                 <button
                   key={a.to}
-                  onClick={() => navigate(a.to)}
+                  onClick={() => router.push(a.to)}
                   className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 hover:bg-orange-50 hover:border-orange-300 transition text-left"
                 >
                   <span className="text-lg shrink-0">{a.icon}</span>

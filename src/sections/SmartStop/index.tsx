@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
@@ -31,15 +33,15 @@ const smartStopWallets = ["futapay", "momo", "card"]
 type View = "menu" | "cart" | "pay" | "qr";
 
 export const SmartStop = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { activeJourney, setCart, setPickedUp } = useJourney();
   const { balance: futapayBalance, pay: walletPay, topUp } = useWallet();
 
   useEffect(() => {
     if (!activeJourney) {
-      navigate("/", { replace: true });
+      router.replace("/");
     }
-  }, [activeJourney, navigate]);
+  }, [activeJourney, router]);
 
   // Pre-pick the default view BEFORE we early-return so the initial useState below
   // is consistent on every render.
@@ -147,7 +149,7 @@ export const SmartStop = () => {
               </div>
             )}
             <button
-              onClick={() => navigate("/trip-progress")}
+              onClick={() => router.push("/trip-progress")}
               className="w-full mt-3 py-3 rounded-full border border-slate-300 text-slate-700 font-medium hover:bg-slate-50"
             >
               Quay lại hành trình

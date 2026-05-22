@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/contexts/WalletContext";
 
@@ -9,7 +11,7 @@ const formatVND = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 export const DesktopHeader = () => {
   const { isLoggedIn, userName, login } = useAuth();
   const { balance } = useWallet();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -22,20 +24,20 @@ export const DesktopHeader = () => {
   };
 
   const handleNavigateToProgress = () => {
-    navigate("/trip-progress");
+    router.push("/trip-progress");
   };
 
   const handleNavigateToFutapay = () => {
-    navigate("/futapay");
+    router.push("/futapay");
   };
 
   const handleNavigateToVouchers = () => {
-    navigate("/vouchers");
+    router.push("/vouchers");
   };
 
   const handleNavigateToMiniGames = () => {
     setIsDropdownOpen(false);
-    navigate('/mini-games');
+    router.push("/mini-games");
   };
 
   // Close dropdown when clicking outside

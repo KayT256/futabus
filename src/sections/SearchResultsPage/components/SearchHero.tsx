@@ -1,11 +1,13 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { SearchForm } from "@/sections/SearchResultsPage/components/SearchForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { trips } from "@/data/trips";
 import { TripCard } from "@/sections/SearchResultsPage/components/TripCard";
 
 export const SearchHero = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isLoggedIn } = useAuth();
   
   return (

@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useJourney } from "@/contexts/JourneyContext";
 import { quickReportIssues } from "@/data/quickReportIssues";
@@ -14,7 +16,7 @@ import { PageShell } from "@/components/PageShell";
 // to type those details when they're stressed/in a hurry.
 
 export const QuickReport = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { activeJourney } = useJourney();
 
   const [pickedId, setPickedId] = useState<string | null>(null);
@@ -24,9 +26,9 @@ export const QuickReport = () => {
 
   useEffect(() => {
     if (!activeJourney) {
-      navigate("/", { replace: true });
+      router.replace("/");
     }
-  }, [activeJourney, navigate]);
+  }, [activeJourney, router]);
 
   if (!activeJourney) return null;
 
@@ -69,7 +71,7 @@ export const QuickReport = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate("/trip-progress")}
+              onClick={() => router.push("/trip-progress")}
               className="w-full mt-5 py-3 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600"
             >
               Quay lại hành trình
