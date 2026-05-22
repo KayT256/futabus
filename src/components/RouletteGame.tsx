@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wheel } from "react-custom-roulette";
+import { Wheel } from "react-custom-roulette-r19";
 import { useVouchers } from "@/contexts/VoucherContext";
 import { toast } from "sonner";
 
