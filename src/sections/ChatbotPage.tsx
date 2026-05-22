@@ -46,7 +46,7 @@ type ChatItem =
   | { type: "route-result"; recommendedTrip: Trip }
   | { type: "quiz-options"; step: number; options: string[] }
   | { type: "travel-plan"; destinations: string[]; budget: string }
-  | { type: "route-cards"; trips: Array<{ id: string; display: "route" | "map" }> }
+  | { type: "route-cards"; trips: Array<{ id: string; display: "trip" | "map" }> }
   | { type: "travel-set"; setName: string; tripIds: string[] }
   | { type: "catalog"; filter: string }
   | { type: "city-select" }
@@ -263,20 +263,20 @@ export function ChatbotPage() {
 
       // Parse [ROUTE:id:display] tags from AI response
       const routeTagRegex = /\[ROUTE:([^:]+)(?::([^\]]+))?\]/g;
-      const foundRoutes: Array<{ id: string; display: "route" | "map" }> = [];
+      const foundRoutes: Array<{ id: string; display: "trip" | "map" }> = [];
       const seenIds = new Set<string>();
       let match;
       while ((match = routeTagRegex.exec(data.reply)) !== null) {
         if (!seenIds.has(match[1]) && !setRouteIds.has(match[1])) {
           seenIds.add(match[1]);
-          foundRoutes.push({ id: match[1], display: (match[2] as "route" | "map") || "route" });
+          foundRoutes.push({ id: match[1], display: (match[2] as "trip" | "map") || "trip" });
         }
       }
 
       // Strip all tags from displayed text
       let cleanReply = data.reply
         .replace(/\s*\[SET:[^\]]+\]/g, "")
-        .replace(/\s*\[ROUTE:[^\]]+\]/g, "")
+        .replace(/\s*\[TRIP:[^\]]+\]/g, "")
         .trim();
       addBot(cleanReply);
 

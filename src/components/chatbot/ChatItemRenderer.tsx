@@ -8,6 +8,7 @@ import { CityPicker } from "./CityPicker";
 import { StoreList } from "./StoreList";
 import { AIOutfitSet } from "./AIOutfitSet";
 import { TravelPlanCard } from "./TravelPlanCard";
+import { TripCards } from "./TripCards";
 
 const formatVND = (price: number) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -24,7 +25,7 @@ type ChatItem =
   | { type: "route-result"; recommendedTrip: Trip }
   | { type: "quiz-options"; step: number; options: string[] }
   | { type: "travel-plan"; destinations: string[]; budget: string }
-  | { type: "route-cards"; trips: Array<{ id: string; display: "route" | "map" }> }
+  | { type: "route-cards"; trips: Array<{ id: string; display: "trip" | "map" }> }
   | { type: "travel-set"; setName: string; tripIds: string[] }
   | { type: "catalog"; filter: string }
   | { type: "city-select" }
@@ -224,6 +225,11 @@ export function ChatItemRenderer({
       const cityTerminals = terminals.filter((t) => t.city === item.city);
       return (
         <StoreList key={index} terminals={cityTerminals} />
+      );
+
+    case "route-cards":
+      return (
+        <TripCards key={index} trips={item.trips} allTrips={trips} />
       );
 
     case "route-form":
